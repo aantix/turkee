@@ -1,161 +1,168 @@
-class TurkeeTask < ActiveRecord::Base
-  belongs_to :task, :polymorphic => true
+module Turkee
 
-  HIT_MAX_ASSIGNMENTS = 5
-  HIT_REWARD          = 0.05
-  HIT_LIFETIME        = 5.days.seconds.to_i   # in seconds
-  HIT_FRAMEHEIGHT     = 1000
-  
-  named_scope :unprocessed_hits, :conditions => ['completed is null']
+  class TurkeeTask < ActiveRecord::Base
+    belongs_to :task, :polymorphic => true
 
-  def logger
-    @logger ||= Logger.new($stderr)
-  end
+    HIT_MAX_ASSIGNMENTS = 5
+    HIT_REWARD          = 0.05
+    HIT_LIFETIME        = 5.days.seconds.to_i
+    # in seconds
+    HIT_FRAMEHEIGHT     = 1000
 
-  # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
-  #  Each specific TurkTask object (determined by task_type field) is in charge of
-  #  accepting/rejecting the assignment and importing the data into their respective tables.
-  def self.process_hits
-    turks = TurkTask.unprocessed_hits
+    named_scope :unprocessed_hits, :conditions => ['completed is null']
 
-    turks.each do |turk|
-      hit = RTurk::Hit.new(turk.hit_id)
+    def logger
+      @logger ||= Logger.new($stderr)
+    end
 
-      hit.assignments.each do |assignment|
-        next if assignment.status != 'Submitted'   # Only process submitted assignments
-        Object::const_get(turk.task_type).eval_assignment(assignment)
+    # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
+    #  Each specific TurkeeTask object (determined by task_type field) is in charge of
+    #  accepting/rejecting the assignment and importing the data into their respective tables.
+    def self.process_hits
+      turks = TurkeeTask.unprocessed_hits
+
+      turks.each do |turk|
+        hit = RTurk::Hit.new(turk.hit_id)
+
+        hit.assignments.each do |assignment|
+          next if assignment.status != 'Submitted'
+          # Only process submitted assignments
+          Object::const_get(turk.task_type).eval_assignment(assignment)
+        end
+
+        turk.completed = true
+        turk.save
+
+        # hit.dispose!
       end
 
-      turk.completed = true
-      turk.save
-      
-      # hit.dispose!
-    end
-    
-  end
-
-  # Creates a new Mechanical Turk  task on AMZN with the given title, desc, etc
-  def self.create_turk(hit_title, hit_description, url)
-
-    h = RTurk::Hit.create(:title => hit_title) do |hit|
-      hit.assignments = HIT_MAX_ASSIGNMENTS
-      hit.description = hit_description
-      hit.reward      = HIT_REWARD
-      hit.lifetime    = HIT_LIFETIME
-      hit.question(url, :frame_height => HIT_FRAMEHEIGHT)  # pixels for iframe
-
-      # hit.qualifications.add :approval_rate, { :gt => 80 }
     end
 
-  end
+    # Creates a new Mechanical Turk  task on AMZN with the given title, desc, etc
+    def self.create_turk(hit_title, hit_description, url)
 
-  # Finds all of the tasks that haven't been posted to Mechanical Turk and creates HITs for them.
-  def self.dequeue_turks(storyboard)
-    turks = TurkeeTask.unqueued_tasks_for_storyboard(storyboard.id)
+      h = RTurk::Hit.create(:title => hit_title) do |hit|
+        hit.assignments = HIT_MAX_ASSIGNMENTS
+        hit.description = hit_description
+        hit.reward      = HIT_REWARD
+        hit.lifetime    = HIT_LIFETIME
+        hit.question(url, :frame_height => HIT_FRAMEHEIGHT)
+        # pixels for iframe
 
-    turks.each do |turk|
-      
-      hit = nil
-      #HIT_MAX_ASSIGNMENTS.times do
-      hit = TurkeeTask.create_turk(turk.hit_title, turk.hit_description, turk.form_url)
-      #end
+        # hit.qualifications.add :approval_rate, { :gt => 80 }
+      end
 
-      # Can't update the turk object with a save since it was retrieved
-      #  using a 'join' so we can use the class level TurkTask update method.
-      TurkeeTask.update(turk.id, {:hit_url => hit.url, :hit_id => hit.id}) unless hit.nil?
     end
 
-  end
+    # Finds all of the tasks that haven't been posted to Mechanical Turk and creates HITs for them.
+    def self.dequeue_turks(storyboard)
+      turks = TurkeeTask.unqueued_tasks_for_storyboard(storyboard.id)
 
-  # Queue a turkee task.  All tasks get paired to a storyboard location.
-  #  E.g. an 'eye-witness account' or a location specific photo.
-  def self.queue_turk(typ, title, description, form_url)
+      turks.each do |turk|
 
-    task = TurkeeTask.create(:sandbox         => TURKTASK_SANDBOX,
-                             :hit_title       => title,
-                             :hit_description => description,
-                             :form_url        => form_url,
-                             :task_type       => typ.to_s) 
+        hit = nil
+        #HIT_MAX_ASSIGNMENTS.times do
+        hit = TurkeeTask.create_turk(turk.hit_title, turk.hit_description, turk.form_url)
+        #end
 
-    # Need to append the turk_task_id to the form url and update the task with it.
-    new_form_url = form_url =~ /\?/ ? "#{form_url}&turk_task_id=#{task.id}" : "#{form_url}?turk_task_id=#{task.id}"
+        # Can't update the turk object with a save since it was retrieved
+        #  using a 'join' so we can use the class level TurkeeTask update method.
+        TurkeeTask.update(turk.id, {:hit_url => hit.url, :hit_id => hit.id}) unless hit.nil?
+      end
 
-    if !new_form_url.nil? && !task.nil?
-      task.form_url = new_form_url
-      task.save
     end
-  end
 
-  ##########################################################################################################
-  # DON'T PUSH THIS BUTTON UNLESS YOU MEAN IT. :)
-  def self.clear_all_turks
-    # Do NOT execute this function if we're in production mode    
-    raise "You can only clear turks in the sandbox/development environment." if RAILS_ENV == 'production'
+    # Queue a turkee task.  All tasks get paired to a storyboard location.
+    #  E.g. an 'eye-witness account' or a location specific photo.
+    def self.queue_turk(typ, title, description, form_url)
 
-    hits = RTurk::Hit.all_reviewable
+      task = TurkeeTask.create(:sandbox         => TURKEETASK_SANDBOX,
+                               :hit_title       => title,
+                               :hit_description => description,
+                               :form_url        => form_url,
+                               :task_type       => typ.to_s)
 
-    logger.info "#{hits.size} reviewable hits. \n"
+      # Need to append the turk_task_id to the form url and update the task with it.
+      new_form_url = form_url =~ /\?/ ? "#{form_url}&turk_task_id=#{task.id}" : "#{form_url}?turk_task_id=#{task.id}"
 
-    unless hits.empty?
-      logger.info puts "Approving all assignments and disposing of each hit."
+      if !new_form_url.nil? && !task.nil?
+        task.form_url = new_form_url
+        task.save
+      end
+    end
 
-      hits.each do |hit|
-        #hit.expire!
-        begin
-          hit.expire! if (hit.status == "Assignable" || hit.status == 'Unassignable')
-          
-          hit.assignments.each do |assignment|
+    ##########################################################################################################
+    # DON'T PUSH THIS BUTTON UNLESS YOU MEAN IT. :)
+    def self.clear_all_turks
+      # Do NOT execute this function if we're in production mode
+      raise "You can only clear turks in the sandbox/development environment." if RAILS_ENV == 'production'
 
-            puts "Assignment status : #{assignment.status}"
-            
-            assignment.approve!('__clear_all_turks__approved__') if assignment.status == 'Submitted'
+      hits = RTurk::Hit.all_reviewable
+
+      logger.info "#{hits.size} reviewable hits. \n"
+
+      unless hits.empty?
+        logger.info puts "Approving all assignments and disposing of each hit."
+
+        hits.each do |hit|
+          #hit.expire!
+          begin
+            hit.expire! if (hit.status == "Assignable" || hit.status == 'Unassignable')
+
+            hit.assignments.each do |assignment|
+
+              logger.info "Assignment status : #{assignment.status}"
+
+              assignment.approve!('__clear_all_turks__approved__') if assignment.status == 'Submitted'
+            end
+            hit.dispose!
+          rescue Exception => e
+            # Probably a service unavailable
+            logger.error "Exception : #{e.to_s}"
           end
-          hit.dispose!
-        rescue Exception => e
-          # Probably a service unavailable
-          logger.error "Exception : #{e.to_s}"
         end
       end
+
     end
 
   end
 
-end
 
+  module TurkeeFormHelper
 
+    # Rails 2.3.8 form_for implementation with the exception of what url it posts to.
+    def turkee_form_for(record_or_name_or_array, *args, &proc)
+      raise ArgumentError, "Missing block" unless block_given?
 
+      options = args.extract_options!
 
+      case record_or_name_or_array
+        when String, Symbol
+          object_name = record_or_name_or_array
+        when Array
+          object = record_or_name_or_array.last
+          object_name = ActionController::RecordIdentifier.singular_class_name(object)
+          apply_form_for_options!(record_or_name_or_array, options)
+          args.unshift object
+        else
+          object = record_or_name_or_array
+          object_name = ActionController::RecordIdentifier.singular_class_name(object)
+          apply_form_for_options!([object], options)
+          args.unshift object
+      end
 
-module TurkeeFormBuilder
-  def mturk_url
-    RAILS_ENV == 'development' ? "https://workersandbox.mturk.com/mturk/externalSubmit" : "https://www.mturk.com/mturk/externalSubmit"
-  end
-
-  # Rails 2.3.8 form_for implementation with the exception of what url it posts to.
-  def turkee_form_for(record_or_name_or_array, *args, &proc)
-    raise ArgumentError, "Missing block" unless block_given?
-
-    options = args.extract_options!
-
-    case record_or_name_or_array
-    when String, Symbol
-      object_name = record_or_name_or_array
-    when Array
-      object = record_or_name_or_array.last
-      object_name = ActionController::RecordIdentifier.singular_class_name(object)
-      apply_form_for_options!(record_or_name_or_array, options)
-      args.unshift object
-    else
-      object = record_or_name_or_array
-      object_name = ActionController::RecordIdentifier.singular_class_name(object)
-      apply_form_for_options!([object], options)
-      args.unshift object
+      # concat(form_tag(options.delete(:url) || {}, options.delete(:html) || {}))
+      concat(form_tag(mturk_url))
+      fields_for(object_name, *(args << options), &proc)
+      concat('</form>'.html_safe)
     end
 
-    # concat(form_tag(options.delete(:url) || {}, options.delete(:html) || {}))
-    concat(form_tag(mturk_url))
-    fields_for(object_name, *(args << options), &proc)
-    concat('</form>'.html_safe)
+    private
+    def mturk_url
+      RAILS_ENV == 'development' ? "https://workersandbox.mturk.com/mturk/externalSubmit" : "https://www.mturk.com/mturk/externalSubmit"
+    end
+
   end
-  
 end
+
+ActionView::Base.send :include, Turkee::TurkeeFormHelper

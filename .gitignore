@@ -1,6 +1,9 @@
 ## MAC OS
 .DS_Store
 
+*.gem
+build.sh
+
 ## TEXTMATE
 *.tmproj
 tmtags

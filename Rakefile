@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'rake'
 
+$LOAD_PATH.unshift('lib')
+
 begin
   INSTALL_MESSAGE = %q{
   ========================================================================
