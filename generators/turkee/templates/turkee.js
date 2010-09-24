@@ -1,9 +1,10 @@
+// Javascript referenced from the rturk example.
+
 // Initializes a mechanical turk form and disables the form button
 //   until the user has accepted the turk task.
 function mturk_form_init()
 {
     document.getElementById('assignmentId').value = gup('assignmentId');
-
 
     //
     // Check if the worker is PREVIEWING the HIT or if they've ACCEPTED the HIT

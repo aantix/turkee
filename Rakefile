@@ -19,8 +19,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "turkee"
-    gem.summary = "Turkee simplifies the posting of forms and the retrieval of those values from Amazons Mechnical Turk."
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = "Turkee makes dealing with Amazon's Mechnical Turk a breeze."
+    gem.description = "Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk."
     gem.email = "jjones@aantix.com"
     gem.homepage = "http://github.com/aantix/turkee"
     gem.authors = ["Jim Jones"]
