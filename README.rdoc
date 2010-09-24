@@ -1,4 +1,4 @@
-== turkee
+== Description
 
 Turkee simplifies the creation of external forms for and the retrieval of form values from Amazon's Mechanical Turk.
 
@@ -48,11 +48,11 @@ After your tasks have been posted to Amazon for a while....
 
 5) Run the rake task that retrieves the values from Amazon and stores the form values into your model. 
 
-    rake blah blah blah
+    rake turkee::getresults
 
-    5a) When the value is retrieved, the individual HIT assignments are approved if a value exists, otherwise
-    they are rejected.  Need to implement a callback here so that developers can implement their own
-    criteria for approving/rejecting HIT assignments.
+6) When the value is retrieved, the individual HIT assignments are approved if a value exists, otherwise
+they are rejected.  Need to implement a callback here so that developers can implement their own
+criteria for approving/rejecting HIT assignments.
 
 
 == Copyright
