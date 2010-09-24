@@ -2,64 +2,57 @@
 
 Turkee simplifies the creation of external forms for and the retrieval of form values from Amazon's Mechanical Turk.
 
-
 == Dependencies
 
-Make sure that rturk is installed and configured with your Amazon Turk credentials.
+Make sure that the rturk gem is installed and configured with your Amazon Turk credentials.
 
 == Install
 
 Install the Turkee gem:
 
-<pre>
-  sudo gem install turkee
-</pre>
+    sudo gem install turkee
 
 And add it to your environment.rb configuration as a gem dependency:
 
-<pre>
-  config.gem 'turkee'
-</pre>
+    config.gem 'turkee'
 
 Run the generator to copy the needed javascript file into your application:
-	rails generator turkee:install # Rails 3
-	./script/generate turkee       # Rails 2
+    rails generator turkee:install # Rails 3
+    ./script/generate turkee       # Rails 2
 
 == Use
 
 1) Add 'turkee' to your javascript includes in your application.html.erb
 
-<pre>
-<%= javascript_include_tag :defaults, :turkee %>
-</pre>
+    <%= javascript_include_tag :defaults, :turkee %>
 
 2) Run your migrations :
 
-<pre>
-rake db:migrate
-</pre>
+    rake db:migrate
 
 3) Change your forms to use the form helper.
 
-<% turkee_form_for @user do |form| %>
-  <%= form.inputs %>
-  <%= form.buttons %>
-<% end %>
+    <% turkee_form_for @user do |form| %>
+        <%= form.inputs %>
+        <%= form.buttons %>
+    <% end %>
 
+Using the turkee_form_for helper will post the form to the Mechanical Turk sandbox if you're in development/test
+mode, otherwise it will be posted to their live site.
 
 4) Run the rake task to post to Amazon the number of tasks, reward, etc for the given form.
 
-<pre>
-rake turkee:posthits Modelname 100 0.05
-</pre>
+    rake turkee:posthits Modelname 100 0.05
 
 After your tasks have been posted to Amazon for a while....
 
 5) Run the rake task that retrieves the values from Amazon and stores the form values into your model. 
 
-<pre>
-rake blah blah blah
-</pre>
+    rake blah blah blah
+
+    5a) When the value is retrieved, the individual HIT assignments are approved if a value exists, otherwise
+    they are rejected.  Need to implement a callback here so that developers can implement their own
+    criteria for approving/rejecting HIT assignments.
 
 
 == Copyright
