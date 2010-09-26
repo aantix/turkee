@@ -10,8 +10,8 @@ class CreateTurkeeTasks < ActiveRecord::Migration
       t.text     "hit_description"
       t.string   "hit_id"
       t.string   "form_url"
-      t.boolean  "completed"
-      t.timestamps      
+      t.string   "approved"
+      t.timestamps
     end
   end
 

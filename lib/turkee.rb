@@ -26,6 +26,22 @@ module Turkee
 
         hit.assignments.each do |assignment|
           next if assignment.status != 'Submitted'
+
+          # See if the model contains the method turkee_approve?
+          model   = Object::const_get(turk.task_type)
+          approve = model.responds_to?(:approve?) ? model.approve?(params) : true
+
+          # NOW, not sure how I can translate the values retrieved from Turk into a hash similar to
+          #  what is posted on a common rails form. Hmmmm...
+          #
+          # params = {"commit"=>"Create", "authenticity_token"=>"I9SAvjpzyO6x4uR5gq5CwMSyCvazKV/A4hCw+ofvSms=",
+          #           "airport"=>{"name"=>"blah blah"}}
+          #
+          model.create(params[model.to_s.downcase])
+
+          # See if the model contains the column 'approved' and if so, mark it as such
+          params[:model.class][:approved] = approve if model.column_names.include?('approved')
+
           # Only process submitted assignments
           Object::const_get(turk.task_type).eval_assignment(assignment)
         end

@@ -30,7 +30,7 @@ begin
     gem.add_development_dependency "rturk", ">= 2.3.0"    
     gem.post_install_message = INSTALL_MESSAGE
     gem.require_path = 'lib'
-    gem.files = %w(MIT-LICENSE README.textile Rakefile init.rb) + Dir.glob("{rails,lib,generators,spec}/**/*")
+    gem.files = %w(MIT-LICENSE README.textile Rakefile init.rb) + Dir.glob("{rails,lib,spec}/**/*")
     
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
