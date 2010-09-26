@@ -47,8 +47,7 @@ Run the generator to copy the needed javascript file into your application:
         <%= form.buttons %>
     <% end %>
 
-Using the turkee_form_for helper will post the form to the Mechanical Turk sandbox if you're in development/test
-mode, otherwise it will be posted to Mechanical Turk production/live site.
+Using the turkee_form_for helper will post the form to the Mechanical Turk sandbox if you're in development/test mode, otherwise it will be posted to Mechanical Turk production/live site.
 
 4. Run the following rake task to post to Mechanical Turk :
     - Title of your HIT
