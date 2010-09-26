@@ -1,10 +1,20 @@
 == Description
 
-Turkee simplifies the creation of external forms for and the retrieval of form values from Amazon's Mechanical Turk.
+Turkee simplifies the process of posting and retrieving HIT (Human Intelligence Task) data from Amazon's Mechanical Turk.
+
+Forms are created using a simple form helper.  HITs are created by issuing a rake command.  Retrieving form data from Amazon
+requires just one more rake command.
 
 == Dependencies
 
-Make sure that the rturk gem is installed and configured with your Amazon Turk credentials.
+Make sure that the rturk gem is installed, referenced in your environment.rb and configured with your Amazon Turk credentials.
+
+    config.gem 'rturk'
+
+E.g. Config
+
+    RTurk::logger.level = Logger::DEBUG
+    RTurk.setup(AWSACCESSKEYID, AWSACCESSKEY, :sandbox => (RAILS_ENV == 'development' ? true : false))
 
 == Install
 
@@ -17,8 +27,8 @@ And add it to your environment.rb configuration as a gem dependency:
     config.gem 'turkee'
 
 Run the generator to copy the needed javascript file into your application:
-    rails generator turkee:install # Rails 3
     ./script/generate turkee       # Rails 2
+    ## Looking to implement Rails 3 in the near future.
 
 == Use
 
@@ -38,19 +48,30 @@ Run the generator to copy the needed javascript file into your application:
     <% end %>
 
 Using the turkee_form_for helper will post the form to the Mechanical Turk sandbox if you're in development/test
-mode, otherwise it will be posted to their live site.
+mode, otherwise it will be posted to Mechanical Turk production/live site.
 
-4) Run the rake task to post to Amazon the number of tasks, reward, etc for the given form.
+4) Run the following rake task to post to Mechanical Turk :
 
-    rake turkee:posthits Modelname 100 0.05 5
+    Model name of your task form (the New action should be implemented)
+    Number of assignments for HIT
+    The reward for a successful completion
+    The lifetime of the HIT in days (e.g. 5 days)
 
-After your tasks have been posted to Amazon for a while....
+    rake turkee:posthit <Title>, <Description>, <Model>, <Number of Assignments>, <Reward>, <Lifetime>
 
-5) Run the rake task that retrieves the values from Amazon and stores the form values into your model. 
+    e.g. :
+    rake turkee:posthit "Please complete our survey", "Tell us your favorite color.", Survey, 100, 0.05, 100
+
+
+Allow sometime for the "Turkers" to respond to your HIT.
+
+5) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
 
     rake turkee::getresults
 
-6) When a value is retrieved from Mechanical Turk, Turkee attempts to create a data row for the model specified
+Rerun this task to see your data come in (run it as a cronjob if you'd like).
+
+6) When a response is retrieved from Mechanical Turk, Turkee attempts to create a data row for the model specified
 using the corresponding retrieved data.  If the row cannot be created, the assignment is rejected.
 
 As for approval, if the row is created and you haven't specified your own custom approve? method for the model

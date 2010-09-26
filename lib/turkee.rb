@@ -5,18 +5,21 @@ module Turkee
   end
 
   class TurkeeTask < ActiveRecord::Base
-    belongs_to :task, :polymorphic => true
-
-    HIT_MAX_ASSIGNMENTS = 5
-    HIT_REWARD          = 0.05
-    HIT_LIFETIME        = 5.days.seconds.to_i
-    # in seconds
+    # belongs_to :task, :polymorphic => true
     HIT_FRAMEHEIGHT     = 1000
 
     named_scope :unprocessed_hits, :conditions => ['approved is ?',nil]
 
     def logger
       @logger ||= Logger.new($stderr)
+    end
+
+    def self.app
+      @session ||= ActionController::Integration::Session.new
+    end
+
+    def self.form_url(typ)
+      eval("app.new_#{typ.class.to_s.underscore}_url")
     end
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
@@ -32,16 +35,8 @@ module Turkee
           next if assignment.status != 'Submitted'
           next if TurkImportedAssignment.find_by_assignment_id(assignment.id).count > 0
 
-
-          # See if the model contains the method turkee_approve?
           model   = Object::const_get(turk.task_type)
 
-          # NOW, not sure how I can translate the values retrieved from Turk into a hash similar to
-          #  what is posted on a common rails form. Hmmmm...
-          #
-          # params = {"commit"=>"Create", "authenticity_token"=>"I9SAvjpzyO6x4uR5gq5CwMSyCvazKV/A4hCw+ofvSms=",
-          #           "airport"=>{"name"=>"blah blah"}}
-          #
           # ruby-1.8.7-p302 > Rack::Utils.parse_nested_query("authenticity_token=TfWm9jaKPxjzHHF0YscG4K29S3%2B0n86ii%2Fo4Nh3piJo%3D&survey%5Bresponse%5D=4444&commit=Create")
           # => {"commit"=>"Create", "authenticity_token"=>"TfWm9jaKPxjzHHF0YscG4K29S3+0n86ii/o4Nh3piJo=", "survey"=>{"response"=>"4444"}}
           #
@@ -68,64 +63,42 @@ module Turkee
 
     end
 
-    # Creates a new Mechanical Turk  task on AMZN with the given title, desc, etc
-    def self.create_turk(hit_title, hit_description, url)
+    # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
+    def self.create_hit(hit_title, hit_description, typ, num_assignments, reward, lifetime)
+
+      hit_url = form_url(typ)
+      task = TurkeeTask.create(:sandbox         => (RAILS_ENV == 'development' ? true : false),
+                               :hit_title       => hit_title,
+                               :hit_description => hit_description,
+                               :form_url        => hit_url,
+                               :task_type       => typ.to_s,
+                               :approved        => nil)
+
+      # Need to append the turk_task_id to the form url and update the task with it.
+      # hit_url = form_url =~ /\?/ ? "#{form_url}&turk_task_id=#{task.id}" : "#{form_url}?turk_task_id=#{task.id}"
+
+      # if !new_form_url.nil? && !task.nil?
+      #   task.form_url = new_form_url
+      #   task.save
+      # end
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
-        hit.assignments = HIT_MAX_ASSIGNMENTS
+        hit.assignments = num_assignments
         hit.description = hit_description
-        hit.reward      = HIT_REWARD
-        hit.lifetime    = HIT_LIFETIME
+        hit.reward      = reward
+        hit.lifetime    = lifetime.days.seconds.to_i
         hit.question(url, :frame_height => HIT_FRAMEHEIGHT)
-        # pixels for iframe
 
         # hit.qualifications.add :approval_rate, { :gt => 80 }
       end
 
     end
 
-    # Finds all of the tasks that haven't been posted to Mechanical Turk and creates HITs for them.
-    def self.dequeue_turks(storyboard)
-      turks = TurkeeTask.unqueued_tasks_for_storyboard(storyboard.id)
-
-      turks.each do |turk|
-
-        hit = nil
-        #HIT_MAX_ASSIGNMENTS.times do
-        hit = TurkeeTask.create_turk(turk.hit_title, turk.hit_description, turk.form_url)
-        #end
-
-        # Can't update the turk object with a save since it was retrieved
-        #  using a 'join' so we can use the class level TurkeeTask update method.
-        TurkeeTask.update(turk.id, {:hit_url => hit.url, :hit_id => hit.id}) unless hit.nil?
-      end
-
-    end
-
-    # Queue a turkee task.  All tasks get paired to a storyboard location.
-    #  E.g. an 'eye-witness account' or a location specific photo.
-    def self.queue_turk(typ, title, description, form_url)
-
-      task = TurkeeTask.create(:sandbox         => TURKEETASK_SANDBOX,
-                               :hit_title       => title,
-                               :hit_description => description,
-                               :form_url        => form_url,
-                               :task_type       => typ.to_s)
-
-      # Need to append the turk_task_id to the form url and update the task with it.
-      new_form_url = form_url =~ /\?/ ? "#{form_url}&turk_task_id=#{task.id}" : "#{form_url}?turk_task_id=#{task.id}"
-
-      if !new_form_url.nil? && !task.nil?
-        task.form_url = new_form_url
-        task.save
-      end
-    end
-
     ##########################################################################################################
     # DON'T PUSH THIS BUTTON UNLESS YOU MEAN IT. :)
-    def self.clear_all_turks
+    def self.clear_all_turks(force = false)
       # Do NOT execute this function if we're in production mode
-      raise "You can only clear turks in the sandbox/development environment." if RAILS_ENV == 'production'
+      raise "You can only clear turks in the sandbox/development environment unless you pass 'true' for the force flag." if RAILS_ENV == 'production' && !force
 
       hits = RTurk::Hit.all_reviewable
 
