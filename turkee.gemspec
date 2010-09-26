@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jim Jones"]
-  s.date = %q{2010-09-24}
+  s.date = %q{2010-09-25}
   s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [
@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
      "lib/generators/turkee/install_generator.rb",
      "lib/generators/turkee/templates/turkee.js",
      "lib/generators/turkee/templates/turkee_migration.rb.erb",
+     "lib/tasks/turkee.rake",
      "lib/turkee.rb",
      "spec/spec.opts",
      "spec/spec_helper.rb",

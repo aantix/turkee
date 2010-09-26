@@ -1,5 +1,9 @@
 module Turkee
 
+  # Model simply tracks what assignments have been imported
+  class TurkeeImportedAssignment < ActiveRecord::Base
+  end
+
   class TurkeeTask < ActiveRecord::Base
     belongs_to :task, :polymorphic => true
 
@@ -9,7 +13,7 @@ module Turkee
     # in seconds
     HIT_FRAMEHEIGHT     = 1000
 
-    named_scope :unprocessed_hits, :conditions => ['completed is null']
+    named_scope :unprocessed_hits, :conditions => ['approved is ?',nil]
 
     def logger
       @logger ||= Logger.new($stderr)
@@ -26,10 +30,11 @@ module Turkee
 
         hit.assignments.each do |assignment|
           next if assignment.status != 'Submitted'
+          next if TurkImportedAssignment.find_by_assignment_id(assignment.id).count > 0
+
 
           # See if the model contains the method turkee_approve?
           model   = Object::const_get(turk.task_type)
-          approve = model.responds_to?(:approve?) ? model.approve?(params) : true
 
           # NOW, not sure how I can translate the values retrieved from Turk into a hash similar to
           #  what is posted on a common rails form. Hmmmm...
@@ -37,17 +42,26 @@ module Turkee
           # params = {"commit"=>"Create", "authenticity_token"=>"I9SAvjpzyO6x4uR5gq5CwMSyCvazKV/A4hCw+ofvSms=",
           #           "airport"=>{"name"=>"blah blah"}}
           #
-          model.create(params[model.to_s.downcase])
+          # ruby-1.8.7-p302 > Rack::Utils.parse_nested_query("authenticity_token=TfWm9jaKPxjzHHF0YscG4K29S3%2B0n86ii%2Fo4Nh3piJo%3D&survey%5Bresponse%5D=4444&commit=Create")
+          # => {"commit"=>"Create", "authenticity_token"=>"TfWm9jaKPxjzHHF0YscG4K29S3+0n86ii/o4Nh3piJo=", "survey"=>{"response"=>"4444"}}
+          #
+          params     = assignment.answers.map{|k,v| "#{CGI::escape(k)}=#{CGI::escape(v)}"}.join(',')
+          param_hash = Rack::Utils.parse_nested_query(params)
+          result     = model.create(param_hash)
 
-          # See if the model contains the column 'approved' and if so, mark it as such
-          params[:model.class][:approved] = approve if model.column_names.include?('approved')
+          # If there's a custom approve? method, see if we should approve the submitted assignment
+          #  otherwise just approve it by default
+          if result.errors.size > 0
+             assignment.reject!('Failed to enter proper data.')
+          elsif result.responds_to?(:approve?)
+            result.approve? ? assignment.approve!('') : assignment.reject!('')
+          else
+            assignment.approve!('')
+          end
 
-          # Only process submitted assignments
-          Object::const_get(turk.task_type).eval_assignment(assignment)
+          TurkeeImportedAssignment.create(:assignment_id => assignment.id)
+
         end
-
-        turk.completed = true
-        turk.save
 
         # hit.dispose!
       end

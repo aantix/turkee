@@ -42,7 +42,7 @@ mode, otherwise it will be posted to their live site.
 
 4) Run the rake task to post to Amazon the number of tasks, reward, etc for the given form.
 
-    rake turkee:posthits Modelname 100 0.05
+    rake turkee:posthits Modelname 100 0.05 5
 
 After your tasks have been posted to Amazon for a while....
 
@@ -50,10 +50,20 @@ After your tasks have been posted to Amazon for a while....
 
     rake turkee::getresults
 
-6) When the value is retrieved, the individual HIT assignments are approved if a value exists, otherwise
-they are rejected.  Need to implement a callback here so that developers can implement their own
-criteria for approving/rejecting HIT assignments.
+6) When a value is retrieved from Mechanical Turk, Turkee attempts to create a data row for the model specified
+using the corresponding retrieved data.  If the row cannot be created, the assignment is rejected.
 
+As for approval, if the row is created and you haven't specified your own custom approve? method for the model
+the assignment will automatically be approved.
+
+by default the assignment is automatically approved.  If you'd like to add your
+own custom approval method, add the approve? instance method to your model.  E.g. :
+
+    class Survey < ActiveRecord::Base
+      def approve?
+        (!response.blank? && !comment.blank?)
+      end
+    end
 
 == Copyright
 
