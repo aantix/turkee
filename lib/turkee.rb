@@ -26,39 +26,47 @@ module Turkee
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
     #  accepting/rejecting the assignment and importing the data into their respective tables.
     def self.process_hits
-      turks = TurkeeTask.unprocessed_hits
 
-      turks.each do |turk|
-        hit = RTurk::Hit.new(turk.hit_id)
+      begin
+        Lockfile.new('/tmp/turk_processor.lock', :retries => 0) do
 
-        hit.assignments.each do |assignment|
-          next if assignment.status != 'Submitted'
-          next if TurkImportedAssignment.find_by_assignment_id(assignment.id).count > 0
+          turks = TurkeeTask.unprocessed_hits
 
-          model   = Object::const_get(turk.task_type)
+          turks.each do |turk|
+            hit = RTurk::Hit.new(turk.hit_id)
 
-          # ruby-1.8.7-p302 > Rack::Utils.parse_nested_query("authenticity_token=TfWm9jaKPxjzHHF0YscG4K29S3%2B0n86ii%2Fo4Nh3piJo%3D&survey%5Bresponse%5D=4444&commit=Create")
-          # => {"commit"=>"Create", "authenticity_token"=>"TfWm9jaKPxjzHHF0YscG4K29S3+0n86ii/o4Nh3piJo=", "survey"=>{"response"=>"4444"}}
-          #
-          params     = assignment.answers.map{|k,v| "#{CGI::escape(k)}=#{CGI::escape(v)}"}.join('&')
-          param_hash = Rack::Utils.parse_nested_query(params)
-          result     = model.create(param_hash)
+            hit.assignments.each do |assignment|
+              next if assignment.status != 'Submitted'
+              next if TurkImportedAssignment.find_by_assignment_id(assignment.id).count > 0
 
-          # If there's a custom approve? method, see if we should approve the submitted assignment
-          #  otherwise just approve it by default
-          if result.errors.size > 0
-             assignment.reject!('Failed to enter proper data.')
-          elsif result.responds_to?(:approve?)
-            result.approve? ? assignment.approve!('') : assignment.reject!('')
-          else
-            assignment.approve!('')
+              model   = Object::const_get(turk.task_type)
+
+              # ruby-1.8.7-p302 > Rack::Utils.parse_nested_query("authenticity_token=TfWm9jaKPxjzHHF0YscG4K29S3%2B0n86ii%2Fo4Nh3piJo%3D&survey%5Bresponse%5D=4444&commit=Create")
+              # => {"commit"=>"Create", "authenticity_token"=>"TfWm9jaKPxjzHHF0YscG4K29S3+0n86ii/o4Nh3piJo=", "survey"=>{"response"=>"4444"}}
+              #
+              params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
+              param_hash = Rack::Utils.parse_nested_query(params)
+              result     = model.create(param_hash)
+
+              # If there's a custom approve? method, see if we should approve the submitted assignment
+              #  otherwise just approve it by default
+              if result.errors.size > 0
+                assignment.reject!('Failed to enter proper data.')
+              elsif result.responds_to?(:approve?)
+                result.approve? ? assignment.approve!('') : assignment.reject!('')
+              else
+                assignment.approve!('')
+              end
+
+              TurkeeImportedAssignment.create(:assignment_id => assignment.id)
+
+            end
+
+            # hit.dispose!
           end
-
-          TurkeeImportedAssignment.create(:assignment_id => assignment.id)
-
         end
-
-        # hit.dispose!
+      rescue Lockfile::MaxTriesLockError => e
+        # logger.info "Turk process is already running. Exiting."
       end
 
     end

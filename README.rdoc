@@ -28,7 +28,7 @@ And add it to your environment.rb configuration as a gem dependency:
 To access the Turkee rake tasks, add the following to your application's Rakefile:
     require 'tasks/turkee'
 
-Run the turkee generator from your application directory to copy the needed javascript file into your application:
+Run the turkee generator from your application directory to copy the needed javascript file and migrations into your application:
 
     ./script/generate turkee    # Rails 2
     ## Support for Rails 3 in the future.
@@ -67,7 +67,13 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
 6) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
     rake turkee::getresults
 
-Rerun this task to see your data come in (run it as a cronjob if you'd like).
+Rerun this task periodically to retrieve newly entered form values.  You can setup this task as a cronjob to automate this.
+
+    crontab -e
+
+    # E.g. run every five minutes
+    */5 * * * * cd /var/www/your/turk/application && rake turkee:getresults
+
 
 7) When a response is retrieved from Mechanical Turk, Turkee attempts to create a data row for the model specified using the corresponding retrieved data.  If the row cannot be created, the assignment is rejected.
 As for approval, if the row is created and you haven't specified your own custom approve? method for the model the assignment will automatically be approved. If you'd like to add your own custom approval method, add the approve? instance method to your model.  E.g. :

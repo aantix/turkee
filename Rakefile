@@ -8,14 +8,11 @@ begin
   ========================================================================
   Turkee Installation Complete.
   ------------------------------------------------------------------------
-  Please run the generator to copy the needed javascript file
-  into your application:
-    rails generator turkee:install # Rails 3
-    ./script/generate turkee       # Rails 2
 
   For instructions on gem usage, visit:
     http://github.com/aantix/turkee#readme
   ========================================================================
+  -- Gobble, gobble.
   }
   
   require 'jeweler'
@@ -27,7 +24,8 @@ begin
     gem.homepage = "http://github.com/aantix/turkee"
     gem.authors = ["Jim Jones"]
     gem.add_development_dependency "rspec", ">= 1.2.9"
-    gem.add_development_dependency "rturk", ">= 2.3.0"    
+    gem.add_development_dependency "rturk", ">= 2.3.0"
+    gem.add_development_dependency "lockfile", ">= 1.4.3"
     gem.post_install_message = INSTALL_MESSAGE
     gem.require_path = 'lib'
     gem.files = %w(MIT-LICENSE README.textile Rakefile init.rb) + Dir.glob("{generators,lib,spec}/**/*")
