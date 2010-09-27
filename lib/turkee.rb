@@ -40,7 +40,7 @@ module Turkee
           # ruby-1.8.7-p302 > Rack::Utils.parse_nested_query("authenticity_token=TfWm9jaKPxjzHHF0YscG4K29S3%2B0n86ii%2Fo4Nh3piJo%3D&survey%5Bresponse%5D=4444&commit=Create")
           # => {"commit"=>"Create", "authenticity_token"=>"TfWm9jaKPxjzHHF0YscG4K29S3+0n86ii/o4Nh3piJo=", "survey"=>{"response"=>"4444"}}
           #
-          params     = assignment.answers.map{|k,v| "#{CGI::escape(k)}=#{CGI::escape(v)}"}.join(',')
+          params     = assignment.answers.map{|k,v| "#{CGI::escape(k)}=#{CGI::escape(v)}"}.join('&')
           param_hash = Rack::Utils.parse_nested_query(params)
           result     = model.create(param_hash)
 
@@ -162,7 +162,7 @@ module Turkee
 
     private
     def mturk_url
-      RAILS_ENV == 'development' ? "https://workersandbox.mturk.com/mturk/externalSubmit" : "https://www.mturk.com/mturk/externalSubmit"
+      Rails.env == 'development' ? "https://workersandbox.mturk.com/mturk/externalSubmit" : "https://www.mturk.com/mturk/externalSubmit"
     end
 
   end
