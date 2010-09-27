@@ -162,7 +162,7 @@ module Turkee
 
     private
     def mturk_url
-      Rails.env == 'development' ? "https://workersandbox.mturk.com/mturk/externalSubmit" : "https://www.mturk.com/mturk/externalSubmit"
+      Rails.env == 'production' ? "https://www.mturk.com/mturk/externalSubmit" : "https://workersandbox.mturk.com/mturk/externalSubmit"
     end
 
   end

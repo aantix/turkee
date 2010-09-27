@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
      "generators/turkee/templates/turkee_imported_assignments.rb.erb",
      "generators/turkee/templates/turkee_migration.rb.erb",
      "generators/turkee/turkee_generator.rb",
-     "lib/tasks/turkee.rake",
+     "lib/tasks/turkee.rb",
      "lib/turkee.rb",
      "spec/spec.opts",
      "spec/spec_helper.rb",
