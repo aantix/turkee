@@ -37,7 +37,7 @@ Run the turkee generator from your application directory to copy the needed java
 
 1) Add 'turkee' to your javascript includes in your application.html.erb
     <%= javascript_include_tag :defaults, :turkee %>
-
+   * Turkee requires the default Rails javascript libraries, so be sure you are including those as well (as show above with :defaults).
 2) Run your migrations :
 
     rake db:migrate
@@ -62,7 +62,7 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
     e.g. :
     rake turkee:posthit "Please complete our survey", "Tell us your favorite color.", Survey, 100, 0.05, 100
 
-5) Allow sometime for the "Turkers" to respond to your HIT.
+5) Allow some time for the "Turkers" to respond to your HIT.
 
 6) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
     rake turkee::getresults

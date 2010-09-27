@@ -2,7 +2,7 @@
 
 // Initializes a mechanical turk form and disables the form button
 //   until the user has accepted the turk task.
-function mturk_form_init()
+function mturk_form_init(obj_name)
 {
     document.getElementById('assignmentId').value = gup('assignmentId');
 
@@ -12,8 +12,8 @@ function mturk_form_init()
     if (gup('assignmentId') == "ASSIGNMENT_ID_NOT_AVAILABLE")
     {
       // If we're previewing, disable the button and give it a helpful message
-      document.getElementById('submitButton').disabled = true;
-      document.getElementById('submitButton').value = "You must ACCEPT the HIT before you can submit the results.";
+      document.getElementById(obj_name + '_submit').disabled = true;
+      document.getElementById(obj_name + '_submit').value = "You must ACCEPT the HIT before you can submit the results.";
     } else {
         var form = document.getElementById('mturk_form');
         if (document.referrer && ( document.referrer.indexOf('workersandbox') != -1) ) {
