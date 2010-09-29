@@ -10,9 +10,12 @@ Make sure that the rturk gem is installed, referenced in your environment.rb :
 
     config.gem 'rturk'
 
-...and configured with your Amazon Turk credentials:
+...and configured with your Amazon Turk credentials. I have a config/initializer/turk_task_config.rb file with the following in it:
 
-    RTurk::logger.level = Logger::DEBUG
+    TURKTASK_AWSACCESSKEYID = 'XXXXXXXXXXXXXXXXXX'
+    TURKTASK_AWSACCESSKEY   = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+
+    RTurk::logger.level     = Logger::DEBUG
     RTurk.setup(AWSACCESSKEYID, AWSACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))
 
 == Install
