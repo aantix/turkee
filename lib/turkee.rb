@@ -79,36 +79,28 @@ module Turkee
     def self.create_hit(hit_title, hit_description, typ, num_assignments, reward, lifetime)
       require typ
 
-      duration = lifetime.to_i
       model    = Object::const_get(typ)
-      hit_url  = form_url(model)
 
-      puts "hit_url = #{hit_url}"
-
-      task = TurkeeTask.create(:sandbox         => (Rails.env == 'production' ? false : true),
-                               :hit_title       => hit_title,
-                               :hit_description => hit_description,
-                               :form_url        => hit_url,
-                               :task_type       => typ,
-                               :approved        => nil)
-
-      # Need to append the turk_task_id to the form url and update the task with it.
-      # hit_url = form_url =~ /\?/ ? "#{form_url}&turk_task_id=#{task.id}" : "#{form_url}?turk_task_id=#{task.id}"
-
-      # if !new_form_url.nil? && !task.nil?
-      #   task.form_url = new_form_url
-      #   task.save
-      # end
+      duration = lifetime.to_i
+      f_url    = form_url(model)
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
         hit.assignments = num_assignments
         hit.description = hit_description
         hit.reward      = reward
         hit.lifetime    = duration.days.seconds.to_i
-        hit.question(hit_url, :frame_height => HIT_FRAMEHEIGHT)
-
+        hit.question(f_url, :frame_height => HIT_FRAMEHEIGHT)
         # hit.qualifications.add :approval_rate, { :gt => 80 }
       end
+
+      task = TurkeeTask.create(:sandbox         => (Rails.env == 'production' ? false : true),
+                               :hit_title       => hit_title,
+                               :hit_description => hit_description,
+                               :form_url        => f_url,
+                               :hit_url         => h.url,
+                               :task_type       => typ,
+                               :approved        => nil)
+
 
     end
 
