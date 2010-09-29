@@ -10,7 +10,7 @@ Make sure that the rturk gem is installed, referenced in your environment.rb :
 
     config.gem 'rturk'
 
-...and configured with your Amazon Turk credentials. I have a config/initializer/turk_task_config.rb file with the following in it:
+...and configured with your Amazon Turk credentials. I created a config/initializers/turk_task_config.rb file with the following in it:
 
     TURKTASK_AWSACCESSKEYID = 'XXXXXXXXXXXXXXXXXX'
     TURKTASK_AWSACCESSKEY   = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
