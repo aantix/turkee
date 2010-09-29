@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jim Jones"]
-  s.date = %q{2010-09-26}
+  s.date = %q{2010-09-29}
   s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [
@@ -33,14 +33,11 @@ Gem::Specification.new do |s|
   ========================================================================
   Turkee Installation Complete.
   ------------------------------------------------------------------------
-  Please run the generator to copy the needed javascript file
-  into your application:
-    rails generator turkee:install # Rails 3
-    ./script/generate turkee       # Rails 2
 
   For instructions on gem usage, visit:
     http://github.com/aantix/turkee#readme
   ========================================================================
+  -- Gobble, gobble.
   }
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
@@ -58,13 +55,16 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_development_dependency(%q<rturk>, [">= 2.3.0"])
+      s.add_development_dependency(%q<lockfile>, [">= 1.4.3"])
     else
       s.add_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_dependency(%q<rturk>, [">= 2.3.0"])
+      s.add_dependency(%q<lockfile>, [">= 1.4.3"])
     end
   else
     s.add_dependency(%q<rspec>, [">= 1.2.9"])
     s.add_dependency(%q<rturk>, [">= 2.3.0"])
+    s.add_dependency(%q<lockfile>, [">= 1.4.3"])
   end
 end
 

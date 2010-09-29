@@ -1,3 +1,9 @@
+require 'rubygems'
+require 'active_record'
+require 'action_view'
+require 'active_support'
+require 'action_controller'
+
 module Turkee
 
   # Model simply tracks what assignments have been imported
@@ -5,6 +11,7 @@ module Turkee
   end
 
   class TurkeeTask < ActiveRecord::Base
+
     # belongs_to :task, :polymorphic => true
     HIT_FRAMEHEIGHT     = 1000
 
@@ -14,12 +21,9 @@ module Turkee
       @logger ||= Logger.new($stderr)
     end
 
-    def self.app
-      @session ||= ActionController::Integration::Session.new
-    end
-
     def self.form_url(typ)
-      eval("app.new_#{typ.class.to_s.underscore}_url")
+      @app ||= ActionController::Integration::Session.new
+      @app.send("new_#{typ.to_s.underscore}_url",:host => 'www.yahoo.com')
     end
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
@@ -73,13 +77,19 @@ module Turkee
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
     def self.create_hit(hit_title, hit_description, typ, num_assignments, reward, lifetime)
+      require typ
 
-      hit_url = form_url(typ)
-      task = TurkeeTask.create(:sandbox         => (RAILS_ENV == 'development' ? true : false),
+      duration = lifetime.to_i
+      model    = Object::const_get(typ)
+      hit_url  = form_url(model)
+
+      puts "hit_url = #{hit_url}"
+
+      task = TurkeeTask.create(:sandbox         => (Rails.env == 'production' ? false : true),
                                :hit_title       => hit_title,
                                :hit_description => hit_description,
                                :form_url        => hit_url,
-                               :task_type       => typ.to_s,
+                               :task_type       => typ,
                                :approved        => nil)
 
       # Need to append the turk_task_id to the form url and update the task with it.
@@ -94,8 +104,8 @@ module Turkee
         hit.assignments = num_assignments
         hit.description = hit_description
         hit.reward      = reward
-        hit.lifetime    = lifetime.days.seconds.to_i
-        hit.question(url, :frame_height => HIT_FRAMEHEIGHT)
+        hit.lifetime    = duration.days.seconds.to_i
+        hit.question(hit_url, :frame_height => HIT_FRAMEHEIGHT)
 
         # hit.qualifications.add :approval_rate, { :gt => 80 }
       end
