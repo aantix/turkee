@@ -13,7 +13,7 @@ class CreateTurkeeTasks < ActiveRecord::Migration
       t.integer  "hit_num_assignments"
       t.integer  "hit_lifetime"
       t.string   "form_url"
-      t.string   "approved"
+      t.boolean  "complete"
       t.timestamps
     end
   end

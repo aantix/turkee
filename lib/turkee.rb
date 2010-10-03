@@ -15,7 +15,7 @@ module Turkee
     # belongs_to :task, :polymorphic => true
     HIT_FRAMEHEIGHT     = 1000
 
-    named_scope :unprocessed_hits, :conditions => ['approved is ?',nil]
+    named_scope :unprocessed_hits, :conditions => ['complete = ?', false]
 
     def logger
       @logger ||= Logger.new($stderr)
@@ -23,18 +23,18 @@ module Turkee
 
     def self.form_url(typ)
       @app ||= ActionController::Integration::Session.new
-      @app.send("new_#{typ.to_s.underscore}_url",:host => 'www.yahoo.com')
+      @app.send("new_#{typ.to_s.underscore}_url")
     end
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
     #  accepting/rejecting the assignment and importing the data into their respective tables.
-    def self.process_hits
+    def self.process_hits(turkee_task = nil)
 
       begin
         Lockfile.new('/tmp/turk_processor.lock', :retries => 0) do
 
-          turks = TurkeeTask.unprocessed_hits
+          turks = turkee_task.nil? ? TurkeeTask.unprocessed_hits : TurkeeTask.find(:all, :conditions => ["id = ?",turkee_task.id])
 
           turks.each do |turk|
             hit = RTurk::Hit.new(turk.hit_id)
@@ -66,7 +66,8 @@ module Turkee
 
             end
 
-            # hit.dispose!
+            turkee_task = Turkee::TurkeeTask.find_by_hit_id(hit.id)
+            hit.dispose! if hit.completed_assignments == turkee_task.hit_num_assignments
           end
         end
       rescue Lockfile::MaxTriesLockError => e
@@ -80,7 +81,6 @@ module Turkee
       require typ
 
       model    = Object::const_get(typ)
-
       duration = lifetime.to_i
       f_url    = form_url(model)
 
@@ -93,14 +93,13 @@ module Turkee
         # hit.qualifications.add :approval_rate, { :gt => 80 }
       end
 
-      task = TurkeeTask.create(:sandbox         => (Rails.env == 'production' ? false : true),
-                               :hit_title       => hit_title,
-                               :hit_description => hit_description,
-                               :form_url        => f_url,
-                               :hit_url         => h.url,
-                               :task_type       => typ,
-                               :approved        => nil)
-
+      TurkeeTask.create(:sandbox         => (Rails.env == 'production' ? false : true),
+                        :hit_title       => hit_title,
+                        :hit_description => hit_description,
+                        :form_url        => f_url,
+                        :hit_url         => h.url,
+                        :task_type       => typ,
+                        :complete        => false)
 
     end
 
@@ -143,7 +142,8 @@ module Turkee
 
   module TurkeeFormHelper
 
-    # Rails 2.3.8 form_for implementation with the exception of what url it posts to.
+    # Rails 2.3.8 form_for implementation with the exception of what url it posts to
+    #  and the js check to disable the submit button if the assignment has not been accepted.
     def turkee_form_for(record_or_name_or_array, *args, &proc)
       raise ArgumentError, "Missing block" unless block_given?
 
