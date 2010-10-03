@@ -17,31 +17,23 @@ module Turkee
 
     named_scope :unprocessed_hits, :conditions => ['complete = ?', false]
 
-    def logger
-      @logger ||= Logger.new($stderr)
-    end
-
-    def self.form_url(typ)
-      @app ||= ActionController::Integration::Session.new
-      @app.send("new_#{typ.to_s.underscore}_url")
-    end
-
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
     #  accepting/rejecting the assignment and importing the data into their respective tables.
     def self.process_hits(turkee_task = nil)
 
       begin
-        Lockfile.new('/tmp/turk_processor.lock', :retries => 0) do
+        # Using a lockfile to prevent multiple calls to Amazon.
+        Lockfile.new('/tmp/turk_processor.lock', :max_age => 3600, :retries => 10) do
 
-          turks = turkee_task.nil? ? TurkeeTask.unprocessed_hits : TurkeeTask.find(:all, :conditions => ["id = ?",turkee_task.id])
+          turks = turkee_task.nil? ? TurkeeTask.unprocessed_hits : TurkeeTask.find_all_by_id(turkee_task.id)
 
           turks.each do |turk|
             hit = RTurk::Hit.new(turk.hit_id)
 
             hit.assignments.each do |assignment|
               next if assignment.status != 'Submitted'
-              next if TurkImportedAssignment.find_by_assignment_id(assignment.id).count > 0
+              next if TurkImportedAssignment.find_by_assignment_id(assignment.id).nil?
 
               model   = Object::const_get(turk.task_type)
 
@@ -62,16 +54,15 @@ module Turkee
                 assignment.approve!('')
               end
 
-              TurkeeImportedAssignment.create(:assignment_id => assignment.id)
+              TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
 
             end
 
-            turkee_task = Turkee::TurkeeTask.find_by_hit_id(hit.id)
-            hit.dispose! if hit.completed_assignments == turkee_task.hit_num_assignments
+            hit.dispose! if hit.completed_assignments == turk.hit_num_assignments
           end
         end
       rescue Lockfile::MaxTriesLockError => e
-        # logger.info "Turk process is already running. Exiting."
+        logger.info "TurkTask.process_hits is already running or the lockfile /tmp/turk_processor.lock exists from an improperly shutdown previous process. Exiting method call."
       end
 
     end
@@ -135,6 +126,17 @@ module Turkee
         end
       end
 
+    end
+
+    private
+
+    def logger
+      @logger ||= Logger.new($stderr)
+    end
+
+    def self.form_url(typ)
+      @app ||= ActionController::Integration::Session.new
+      @app.send("new_#{typ.to_s.underscore}_url")
     end
 
   end
