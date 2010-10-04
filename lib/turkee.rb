@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'socket'
 require 'active_record'
 require 'action_view'
 require 'active_support'
@@ -136,7 +137,7 @@ module Turkee
 
     def self.form_url(typ)
       @app ||= ActionController::Integration::Session.new
-      @app.send("new_#{typ.to_s.underscore}_url")
+      @app.send("new_#{typ.to_s.underscore}_url(:host => '#{Socket.gethostname}')")
     end
 
   end
