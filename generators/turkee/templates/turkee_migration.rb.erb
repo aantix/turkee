@@ -4,7 +4,6 @@ class CreateTurkeeTasks < ActiveRecord::Migration
     create_table "turkee_tasks" do |t|
       t.string   "hit_url"
       t.boolean  "sandbox"
-      t.integer  "task_id"
       t.string   "task_type"
       t.text     "hit_title"
       t.text     "hit_description"

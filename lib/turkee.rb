@@ -85,13 +85,17 @@ module Turkee
         # hit.qualifications.add :approval_rate, { :gt => 80 }
       end
 
-      TurkeeTask.create(:sandbox         => (Rails.env == 'production' ? false : true),
-                        :hit_title       => hit_title,
-                        :hit_description => hit_description,
-                        :form_url        => f_url,
-                        :hit_url         => h.url,
-                        :task_type       => typ,
-                        :complete        => false)
+      TurkeeTask.create(:sandbox             => (Rails.env == 'production' ? false : true),
+                        :hit_title           => hit_title,
+                        :hit_description     => hit_description,
+                        :hit_reward          => reward,
+                        :hit_num_assignments => num_assignments,
+                        :hit_lifetime        => lifetime,
+                        :form_url            => f_url,
+                        :hit_url             => h.url,
+                        :hit_id              => h.id,
+                        :task_type           => typ,
+                        :complete            => false)
 
     end
 
@@ -137,7 +141,8 @@ module Turkee
 
     def self.form_url(typ)
       @app ||= ActionController::Integration::Session.new
-      @app.send("new_#{typ.to_s.underscore}_url(:host => '#{Socket.gethostname}')")
+      @app.send("new_#{typ.to_s.underscore}_url")
+#      @app.send("new_#{typ.to_s.underscore}_url(:host => '#{Socket.gethostname}')")
     end
 
   end
