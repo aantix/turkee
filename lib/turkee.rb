@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'socket'
+require 'lockfile'
 require 'active_record'
 require 'action_view'
 require 'active_support'
