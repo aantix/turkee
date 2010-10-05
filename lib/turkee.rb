@@ -70,12 +70,12 @@ module Turkee
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
-    def self.create_hit(hit_title, hit_description, typ, num_assignments, reward, lifetime)
-      require typ
+    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime)
+#      require typ
 
       model    = Object::const_get(typ)
       duration = lifetime.to_i
-      f_url    = form_url(model)
+      f_url    = form_url(host, model)
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
         hit.assignments = num_assignments
@@ -140,10 +140,10 @@ module Turkee
       @logger ||= Logger.new($stderr)
     end
 
-    def self.form_url(typ)
+    def self.form_url(host, typ)
       @app ||= ActionController::Integration::Session.new
-      @app.send("new_#{typ.to_s.underscore}_url")
-#      @app.send("new_#{typ.to_s.underscore}_url(:host => '#{Socket.gethostname}')")
+      #@app.send("new_#{typ.to_s.underscore}_url(:host => '#{host}')")  # Not sure why app does respond when :host is passed...
+      ("http://#{host}" + @app.send("new_#{typ.to_s.underscore}_path")) # Workaround for now. :(
     end
 
   end
