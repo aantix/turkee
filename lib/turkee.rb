@@ -45,9 +45,9 @@ module Turkee
               params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
               param_hash = Rack::Utils.parse_nested_query(params)
 
-              puts "params = #{params.inspect}"
-              puts "param_has = #{param_hash.inspect}"
-              result     = model.create(param_hash)
+              logger.info "params = #{params.inspect}"
+              logger.info "param_hash = #{param_hash.inspect}"
+              result     = model.create(param_hash[turk.task_type.underscore.to_sym])
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
               #  otherwise just approve it by default
