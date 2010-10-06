@@ -151,9 +151,10 @@ module Turkee
 
   module TurkeeFormHelper
 
-    # Rails 2.3.8 form_for implementation with the exception of what url it posts to
-    #  and the js check to disable the submit button if the assignment has not been accepted.
-    def turkee_form_for(record_or_name_or_array, *args, &proc)
+    # Rails 2.3.8 form_for implementation with the exception of the form action url
+    # will always point to the Amazon externalSubmit interface and you must pass in the
+    # assignment_id parameter.
+    def turkee_form_for(record_or_name_or_array, assignment_id, *args, &proc)
       raise ArgumentError, "Missing block" unless block_given?
 
       options = args.extract_options!
@@ -175,6 +176,7 @@ module Turkee
 
       # concat(form_tag(options.delete(:url) || {}, options.delete(:html) || {}))
       concat(form_tag(mturk_url))
+      concat("<input type=\"hidden\" id=\"assignmentId\" name=\"assignmentId\" value=\"#{assignment_id}\"/>")
       fields_for(object_name, *(args << options), &proc)
       concat('</form>'.html_safe)
       # concat('<script type="text/javascript">Event.observe(window, \'load\', function() {mturk_form_init(\''+object_name.to_s.underscore+'\')});</script>')
