@@ -45,25 +45,27 @@ module Turkee
               params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
               param_hash = Rack::Utils.parse_nested_query(params)
 
-              logger.info "params = #{params.inspect}"
-              logger.info "param_hash = #{param_hash.inspect}"
+              puts "params = #{params.inspect}"
+              puts "param_hash = #{param_hash.inspect}"
               result     = model.create(param_hash[turk.task_type.underscore.to_sym])
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
               #  otherwise just approve it by default
               if result.errors.size > 0
-                assignment.reject!('Failed to enter proper data.')
-              elsif result.responds_to?(:approve?)
-                result.approve? ? assignment.approve!('') : assignment.reject!('')
+                puts "Errors : #{result.inspect}"
+                #assignment.reject!('Failed to enter proper data.')
+              elsif result.respond_to?(:approve?)
+                puts "Approving : #{result.inspect}"
+                #result.approve? ? assignment.approve!('') : assignment.reject!('')
               else
-                assignment.approve!('')
+                #assignment.approve!('')
               end
 
               TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
 
             end
 
-            hit.dispose! if hit.completed_assignments == turk.hit_num_assignments
+            #hit.dispose! if hit.completed_assignments == turk.hit_num_assignments
           end
         end
       rescue Lockfile::MaxTriesLockError => e
