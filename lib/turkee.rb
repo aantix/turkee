@@ -177,7 +177,7 @@ module Turkee
       concat(form_tag(mturk_url))
       fields_for(object_name, *(args << options), &proc)
       concat('</form>'.html_safe)
-      concat('<script type="text/javascript">Event.observe(window, \'load\', function() {mturk_form_init(\''+object_name.to_s.underscore+'\')});</script>')
+      # concat('<script type="text/javascript">Event.observe(window, \'load\', function() {mturk_form_init(\''+object_name.to_s.underscore+'\')});</script>')
       self
     end
 
@@ -187,6 +187,7 @@ module Turkee
     end
 
   end
+
 end
 
 ActionView::Base.send :include, Turkee::TurkeeFormHelper
