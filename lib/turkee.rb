@@ -43,15 +43,18 @@ module Turkee
               next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
               puts "2222222"
 
-              model   = Object::const_get(turk.task_type)
+              #model   = Object::const_get(turk.task_type)
 
               # ruby-1.8.7-p302 > Rack::Utils.parse_nested_query("authenticity_token=TfWm9jaKPxjzHHF0YscG4K29S3%2B0n86ii%2Fo4Nh3piJo%3D&survey%5Bresponse%5D=4444&commit=Create")
               # => {"commit"=>"Create", "authenticity_token"=>"TfWm9jaKPxjzHHF0YscG4K29S3+0n86ii/o4Nh3piJo=", "survey"=>{"response"=>"4444"}}
               #
               params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
               param_hash = Rack::Utils.parse_nested_query(params)
+              model      = find_model(param_hash)
 
-              puts "params = #{params.inspect}"
+              next if model.nil?
+
+              puts "params     = #{params.inspect}"
               puts "param_hash = #{param_hash.inspect}"
               result     = model.create(param_hash[turk.task_type.underscore.to_sym])
 
@@ -154,6 +157,20 @@ module Turkee
 
     def logger
       @logger ||= Logger.new($stderr)
+    end
+
+    # Method looks at the parameter and attempts to find an ActiveRecord model
+    #  in the current app that would match the properties of one of the nested hashes
+    #  x = {:submit = 'Create', :iteration_vote => {:iteration_id => 1}}
+    #  The above _should_ return an IterationVote model
+    def find_model(param_hash)
+      param_hash.each do |k, v|
+        if v.is_a?(Hash)
+          model = Object::const_get(k.to_s) rescue next
+          return model if model.descends_from_active_record?
+        end
+      end
+      nil
     end
 
     def self.form_url(host, typ)
