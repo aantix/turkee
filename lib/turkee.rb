@@ -34,8 +34,14 @@ module Turkee
             hit = RTurk::Hit.new(turk.hit_id)
 
             hit.assignments.each do |assignment|
+              puts "assignment.status = #{assignment.status}"
+              params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
+              puts "params = #{params.inspect}"
+
               next unless assignment.status == 'Submitted'
+              puts "111111"
               next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
+              puts "2222222"
 
               model   = Object::const_get(turk.task_type)
 
@@ -53,15 +59,15 @@ module Turkee
               #  otherwise just approve it by default
               if result.errors.size > 0
                 puts "Errors : #{result.inspect}"
-                #assignment.reject!('Failed to enter proper data.')
+                ##assignment.reject!('Failed to enter proper data.')
               elsif result.respond_to?(:approve?)
                 puts "Approving : #{result.inspect}"
-                #result.approve? ? assignment.approve!('') : assignment.reject!('')
+                ##result.approve? ? assignment.approve!('') : assignment.reject!('')
               else
-                #assignment.approve!('')
+                ##assignment.approve!('')
               end
 
-              TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
+              ##TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
 
             end
 
