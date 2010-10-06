@@ -35,7 +35,7 @@ module Turkee
 
             hit.assignments.each do |assignment|
               next if assignment.status != 'Submitted'
-              next if TurkImportedAssignment.find_by_assignment_id(assignment.id).nil?
+              next if TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
 
               model   = Object::const_get(turk.task_type)
 
