@@ -181,9 +181,15 @@ module Turkee
       self
     end
 
-    private
+    # Returns the external Mechanical Turk url used to post form data.
+    #  The sandbox URL is returned unless the Rails environment is in production.
     def mturk_url
       Rails.env == 'production' ? "https://www.mturk.com/mturk/externalSubmit" : "https://workersandbox.mturk.com/mturk/externalSubmit"
+    end
+
+    # Returns whether the form fields should be disabled or not (based on the assignment_id)
+    def self.disable_form_fields?(assignment_id)
+      (assignment_id.nil? || assignment_id == 'ASSIGNMENT_ID_NOT_AVAILABLE')
     end
 
   end
