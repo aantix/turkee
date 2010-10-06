@@ -28,53 +28,44 @@ module Turkee
         # Using a lockfile to prevent multiple calls to Amazon.
         Lockfile.new('/tmp/turk_processor.lock', :max_age => 3600, :retries => 10) do
 
-          turks = turkee_task.nil? ? TurkeeTask.unprocessed_hits : TurkeeTask.find_all_by_id(turkee_task.id)
+          turks = turkee_task.nil? ? TurkeeTask.unprocessed_hits : Array.new << turkee_task
 
           turks.each do |turk|
             hit = RTurk::Hit.new(turk.hit_id)
 
             hit.assignments.each do |assignment|
-              puts "assignment.status = #{assignment.status}"
-              params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
-              puts "params = #{params.inspect}"
-
               next unless assignment.status == 'Submitted'
-              puts "111111"
               next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
-              puts "2222222"
 
-              #model   = Object::const_get(turk.task_type)
-
-              # ruby-1.8.7-p302 > Rack::Utils.parse_nested_query("authenticity_token=TfWm9jaKPxjzHHF0YscG4K29S3%2B0n86ii%2Fo4Nh3piJo%3D&survey%5Bresponse%5D=4444&commit=Create")
-              # => {"commit"=>"Create", "authenticity_token"=>"TfWm9jaKPxjzHHF0YscG4K29S3+0n86ii/o4Nh3piJo=", "survey"=>{"response"=>"4444"}}
-              #
               params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
               param_hash = Rack::Utils.parse_nested_query(params)
               model      = find_model(param_hash)
 
+              logger.debug "params     = #{params.inspect}"
+              logger.debug "param_hash = #{param_hash.inspect}"
+              logger.debug "model      = #{model.inspect}"
+
               next if model.nil?
 
-              puts "params     = #{params.inspect}"
-              puts "param_hash = #{param_hash.inspect}"
-              result     = model.create(param_hash[turk.task_type.underscore.to_sym])
+              result = model.create(param_hash[model.to_s.underscore])
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
               #  otherwise just approve it by default
               if result.errors.size > 0
-                puts "Errors : #{result.inspect}"
-                ##assignment.reject!('Failed to enter proper data.')
+                logger.info "Errors : #{result.inspect}"
+                assignment.reject!('Failed to enter proper data.')
               elsif result.respond_to?(:approve?)
-                puts "Approving : #{result.inspect}"
-                ##result.approve? ? assignment.approve!('') : assignment.reject!('')
+                logger.debug "Approving : #{result.inspect}"
+                result.approve? ? assignment.approve!('') : assignment.reject!('Rejected criteria.')
               else
-                ##assignment.approve!('')
+                assignment.approve!('')
               end
 
-              ##TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
+              TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
 
             end
 
-            #hit.dispose! if hit.completed_assignments == turk.hit_num_assignments
+            hit.dispose! if hit.completed_assignments == turk.hit_num_assignments
           end
         end
       rescue Lockfile::MaxTriesLockError => e
@@ -124,7 +115,7 @@ module Turkee
       logger.info "#{hits.size} reviewable hits. \n"
 
       unless hits.empty?
-        logger.info puts "Approving all assignments and disposing of each hit."
+        logger.info "Approving all assignments and disposing of each hit."
 
         hits.each do |hit|
           begin
@@ -163,10 +154,10 @@ module Turkee
     #  in the current app that would match the properties of one of the nested hashes
     #  x = {:submit = 'Create', :iteration_vote => {:iteration_id => 1}}
     #  The above _should_ return an IterationVote model
-    def find_model(param_hash)
+    def self.find_model(param_hash)
       param_hash.each do |k, v|
         if v.is_a?(Hash)
-          model = Object::const_get(k.to_s) rescue next
+          model = Object::const_get(k.to_s.camelize) rescue next
           return model if model.descends_from_active_record?
         end
       end
