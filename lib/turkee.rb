@@ -91,16 +91,11 @@ module Turkee
       end
 
       TurkeeTask.create(:sandbox             => (Rails.env == 'production' ? false : true),
-                        :hit_title           => hit_title,
-                        :hit_description     => hit_description,
-                        :hit_reward          => reward.to_f,
-                        :hit_num_assignments => num_assignments.to_i,
-                        :hit_lifetime        => lifetime,
-                        :form_url            => f_url,
-                        :hit_url             => h.url,
-                        :hit_id              => h.id,
-                        :task_type           => typ,
-                        :complete            => false)
+                        :hit_title           => hit_title,    :hit_description     => hit_description,
+                        :hit_reward          => reward.to_f,  :hit_num_assignments => num_assignments.to_i,
+                        :hit_lifetime        => lifetime,     :form_url            => f_url,
+                        :hit_url             => h.url,        :hit_id              => h.id,
+                        :task_type           => typ,          :complete            => false)
 
     end
 
