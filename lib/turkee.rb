@@ -34,8 +34,8 @@ module Turkee
             hit = RTurk::Hit.new(turk.hit_id)
 
             hit.assignments.each do |assignment|
-              next if assignment.status != 'Submitted'
-              next if TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
+              next unless assignment.status == 'Submitted'
+              next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
 
               model   = Object::const_get(turk.task_type)
 
@@ -44,6 +44,9 @@ module Turkee
               #
               params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
               param_hash = Rack::Utils.parse_nested_query(params)
+
+              puts "params = #{params.inspect}"
+              puts "param_has = #{param_hash.inspect}"
               result     = model.create(param_hash)
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
@@ -113,7 +116,6 @@ module Turkee
         logger.info puts "Approving all assignments and disposing of each hit."
 
         hits.each do |hit|
-          #hit.expire!
           begin
             hit.expire! if (hit.status == "Assignable" || hit.status == 'Unassignable')
 
@@ -123,6 +125,13 @@ module Turkee
 
               assignment.approve!('__clear_all_turks__approved__') if assignment.status == 'Submitted'
             end
+
+            turkee_task = TurkeeTask.find_by_hit_id(hit.id)
+            if turkee_task
+              turkee_task.complete = true
+              turkee_task.save
+            end
+
             hit.dispose!
           rescue Exception => e
             # Probably a service unavailable
