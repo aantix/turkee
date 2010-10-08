@@ -65,7 +65,10 @@ module Turkee
 
             end
 
-            hit.dispose! if hit.completed_assignments == turk.hit_num_assignments
+            if hit.completed_assignments == turk.hit_num_assignments
+              hit.dispose!
+              model.hit_complete(turk) if model.respond_to?(:hit_complete)
+            end
           end
         end
       rescue Lockfile::MaxTriesLockError => e
