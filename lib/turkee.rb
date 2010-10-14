@@ -13,7 +13,6 @@ module Turkee
   end
 
   class TurkeeTask < ActiveRecord::Base
-
     # belongs_to :task, :polymorphic => true
     HIT_FRAMEHEIGHT     = 1000
 
