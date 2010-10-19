@@ -38,35 +38,34 @@ Run the turkee generator from your application directory to copy the needed java
 
 == Use
 
-1) Add 'turkee' to your javascript includes in your application.html.erb
-    <%= javascript_include_tag :defaults, :turkee %>
-   * Turkee requires the default Rails javascript libraries, so be sure you are including those as well (as show above with :defaults).
-2) Run your migrations :
+1) Run your migrations :
 
     rake db:migrate
 
-3) You should disable form controls if the Turker hasn't accepted the HIT.  You can determine this from your controller:
+2) You should disable form controls if the Turker hasn't accepted the HIT.  You can determine this from your controller:
     class SurveysController < ApplicationController
 
         def new
             @assignment_id = params[:assignmentId]
             @disabled      = Turkee::TurkeeFormHelper::disable_form_fields?(@assignment_id)
+
+            # If you wanted to find the associated turkee_task, you could do a find by hitId
+            #  Not necessary in a simple example.
+            # @turkee_task   = Turkee::TurkeeTask.find_by_hit_id(params[:hitId]).id rescue nil
+
             ...
             @survey        = Survey.new
         end
 
-4) Change your forms to use the form helper.
+3) Change your forms to use the form helper.
     <% turkee_form_for(@survey, @assignment_id) do |f| %>
-        <%= f.hidden_field :turkee_task_id, :value => @turkee_task.id %>
-        <%= f.hidden_field :parent_id, :value => @turkee_task.parent_id %>
-
         <p><%= f.text_area :value, :disabled => @disabled %></p>
         <p><%= f.submit 'Create', :disabled => @disabled %></p>
     <% end %>
 
 Using the turkee_form_for helper will post the form to the Mechanical Turk sandbox if you're in development/test mode, otherwise it will be posted to Mechanical Turk production/live site.
 
-5) Run the following rake task to post to Mechanical Turk :
+4) Run the following rake task to post to Mechanical Turk :
     # Title of your HIT
     # Description of your HIT
     # Model name of your task form (the New action should be implemented)
@@ -79,9 +78,11 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
     e.g. :
     rake turkee:posthit ["Please complete our survey", "Tell us your favorite color.", "Survey", 100, 0.05, 2]
 
-6) Allow some time for the "Turkers" to respond to your HIT.
+This will insert a row for the requested HIT into the turkee_tasks table.  The turkee_tasks entry stores (among other things) the HIT URL and HIT ID (as returned from the Mechanical Turk API call).
 
-7) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
+5) Allow some time for the "Turkers" to respond to your HIT.
+
+6) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
     rake turkee::getresults
 
 Rerun this task periodically to retrieve newly entered form values.  You can setup this task as a cronjob to automate this.
@@ -91,8 +92,11 @@ Rerun this task periodically to retrieve newly entered form values.  You can set
     # E.g. run every five minutes
     */5 * * * * cd /var/www/your/turk/application && rake turkee:getresults
 
+Or you can directly call :
 
-8) When a response is retrieved from Mechanical Turk, Turkee attempts to create a data row for the model specified using the corresponding retrieved data.  If the row cannot be created (input failed model validations), the assignment is rejected.
+    Turkee::TurkeeTask.process_hits
+
+7) When a response is retrieved from Mechanical Turk, Turkee attempts to create a data row for the model specified using the corresponding retrieved data.  If the row cannot be created (input failed model validations), the assignment is rejected.
 As for Mechanical Turk approval, if the row is created and you haven't specified your own custom approve? method for the model, the assignment will automatically be approved. If you'd like to add your own custom approval method, add the approve? instance method to your model.  E.g. :
     class Survey < ActiveRecord::Base
       def approve?
