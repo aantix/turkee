@@ -1,16 +1,12 @@
-== Description
+== Turkee Description
 
-Turkee simplifies the process of posting and retrieving HIT (Human Intelligence Task) data from Amazon's Mechanical Turk.
+Seamlessly convert your Rails forms for use on Mechanical Turk.  Then, easily import the data posted by the Mechanical Turk workers back into your data models.
 
-Forms are created using a simple form helper.  HITs are created by issuing a rake command.  Retrieving form data from Amazon requires just one more rake command.
+External forms are created using a simple form helper.  HITs are created by issuing a rake command.  Retrieving submitted response data and importing that data into your model(s) requires just one more rake command.
 
 == Dependencies
 
-Make sure that the rturk gem is installed, referenced in your environment.rb :
-
-    config.gem 'rturk'
-
-...and configured with your Amazon Turk credentials. I created a config/initializers/turk_task_config.rb file with the following in it:
+Make sure that the rturk gem is installed configured with your Amazon Turk credentials. I created a config/initializers/turk_task_config.rb file with the following in it:
 
     TURKTASK_AWSACCESSKEYID = 'XXXXXXXXXXXXXXXXXX'
     TURKTASK_AWSACCESSKEY   = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
@@ -80,7 +76,7 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
 
 This will insert a row for the requested HIT into the turkee_tasks table.  The turkee_tasks entry stores (among other things) the HIT URL and HIT ID (as returned from the Mechanical Turk API call).
 
-5) Allow some time for the "Turkers" to respond to your HIT.
+5) Allow some time for the Mechanical Turk workers ("Turkers") to respond to your HIT.
 
 6) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
     rake turkee::getresults
