@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jim Jones"]
   s.date = %q{2010-10-19}
-  s.description = %q{Seamlessly convert your Rails forms for use on Mechanical Turk. Then, easily import the data posted by the Mechanical Turk workers back into your data models.}
+  s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [
     "LICENSE",
