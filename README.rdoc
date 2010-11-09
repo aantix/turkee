@@ -4,6 +4,10 @@ Seamlessly convert your Rails forms for use on Mechanical Turk.  Then, easily im
 
 External forms are created using a simple form helper.  HITs are created by issuing a rake command.  Retrieving submitted response data and importing that data into your model(s) requires just one more rake command.
 
+== Examples
+
+If you'd like to jump straight into code, check out the {Turkee Iterator}[https://github.com/aantix/Turkee-Iterator] example.
+
 == Dependencies
 
 Make sure that the rturk gem is installed configured with your Amazon Turk credentials. I created a config/initializers/turk_task_config.rb file with the following in it:
@@ -75,6 +79,8 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
     rake turkee:posthit ["Please complete our survey", "Tell us your favorite color.", "Survey", 100, 0.05, 2]
 
 This will insert a row for the requested HIT into the turkee_tasks table.  The turkee_tasks entry stores (among other things) the HIT URL and HIT ID (as returned from the Mechanical Turk API call).
+
+The HIT will direct the Turk workers to the #new method URL of your model.  With the above request, the Turkers would be directed to the form at http://www.yourapp.com/surveys/new
 
 5) Allow some time for the Mechanical Turk workers ("Turkers") to respond to your HIT.
 
