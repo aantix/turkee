@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'socket'
+require 'rturk'
 require 'lockfile'
 require 'active_record'
 require 'action_view'
@@ -39,10 +40,6 @@ module Turkee
               params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
               param_hash = Rack::Utils.parse_nested_query(params)
               model      = find_model(param_hash)
-
-              logger.debug "params     = #{params.inspect}"
-              logger.debug "param_hash = #{param_hash.inspect}"
-              logger.debug "model      = #{model.inspect}"
 
               next if model.nil?
 

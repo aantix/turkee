@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jim Jones"]
-  s.date = %q{2010-10-19}
+  s.date = %q{2011-02-27}
   s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [
@@ -52,16 +52,13 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_development_dependency(%q<rturk>, [">= 2.3.0"])
       s.add_development_dependency(%q<lockfile>, [">= 1.4.3"])
     else
-      s.add_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_dependency(%q<rturk>, [">= 2.3.0"])
       s.add_dependency(%q<lockfile>, [">= 1.4.3"])
     end
   else
-    s.add_dependency(%q<rspec>, [">= 1.2.9"])
     s.add_dependency(%q<rturk>, [">= 2.3.0"])
     s.add_dependency(%q<lockfile>, [">= 1.4.3"])
   end

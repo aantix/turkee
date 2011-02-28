@@ -24,9 +24,13 @@ Install the Turkee gem:
 
     sudo gem install turkee
 
-And add it to your environment.rb configuration as a gem dependency:
+For Rails 2, add it to your environment.rb configuration as a gem dependency:
 
     config.gem 'turkee'
+
+For Rails 3, add it to your Gemfile as a gem dependency, then do a 'bundle install':
+
+    gem 'turkee'
 
 To access the Turkee rake tasks, add the following to your application's Rakefile:
     require 'tasks/turkee'
@@ -34,7 +38,7 @@ To access the Turkee rake tasks, add the following to your application's Rakefil
 Run the turkee generator from your application directory to copy the needed migrations into your application:
 
     ./script/generate turkee    # Rails 2
-    ## Support for Rails 3 in the future.
+    rails g turkee              # Rails 3
 
 == Use
 
@@ -77,11 +81,14 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
     rake turkee:post_hit[<Host>, <Title>, <Description>, <Model>, <Number of Assignments>, <Reward>, <Lifetime>]
 
     e.g. :
-    rake turkee:post_hit ["www.yourapp.com","Please complete our survey", "Tell us your favorite color.", "Survey", 100, 0.05, 2]
+    rake turkee:post_hit["https://www.yourapp.com","Please complete our survey","Tell us your favorite color.","Survey",100,0.05,2]
+    ** Do not put spaces before or after commas for the rake task parameters
 
 This will insert a row for the requested HIT into the turkee_tasks table.  The turkee_tasks entry stores (along with the other properties) the HIT URL (e.g. http://workersandbox.mturk.com/mturk/preview?groupId=1HGHJJGHQSJB7WMWJ33YS8WM169XNIL ) and HIT ID (e.g. 1J1EXO8SUQ3URTTUYGHJ7EKUT11 ).  These values are returned from Mechanical Turk when the HIT request is posted.
 
 When a Turk worker views your HIT, the HIT will display your form within an iFrame.  With the above example, Mechanical Turk will open an iFrame for the HIT assignment displaying the form http://www.yourapp.com/surveys/new
+
+** The application that hosts your external forms preferably should have an https interface (you're going to have to buy an SSL certificate).  If the forms are hosted on an unsecured host (http), because Mechanical Turk defaults to https, you're going to receive the ugly popup from IE regarding "mixed content" (http://msdn.microsoft.com/en-us/library/ee264315%28v=vs.85%29.aspx).
 
 5) Allow some time for the Mechanical Turk workers ("Turkers") to respond to your HIT.
 
@@ -109,4 +116,4 @@ As for Mechanical Turk approval, if the row is created and you haven't specified
 
 == Copyright
 
-Copyright (c) 2010 Jim Jones. See LICENSE for details.
+Copyright (c) 2010 - 2011 Jim Jones. See LICENSE for details.
