@@ -66,6 +66,7 @@ Run the turkee generator from your application directory to copy the needed migr
 Using the turkee_form_for helper will post the form to the Mechanical Turk sandbox if you're in development/test mode, otherwise it will be posted to Mechanical Turk production/live site.
 
 4) Run the following rake task to post to Mechanical Turk :
+    # Host URL of your application
     # Title of your HIT
     # Description of your HIT
     # Model name of your task form (the New action should be implemented)
@@ -73,26 +74,26 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
     # The reward for a successful completion
     # The lifetime of the HIT in days (e.g. 5 days)
 
-    rake turkee:posthit[<Title>, <Description>, <Model>, <Number of Assignments>, <Reward>, <Lifetime>]
+    rake turkee:post_hit[<Host>, <Title>, <Description>, <Model>, <Number of Assignments>, <Reward>, <Lifetime>]
 
     e.g. :
-    rake turkee:posthit ["Please complete our survey", "Tell us your favorite color.", "Survey", 100, 0.05, 2]
+    rake turkee:post_hit ["www.yourapp.com","Please complete our survey", "Tell us your favorite color.", "Survey", 100, 0.05, 2]
 
-This will insert a row for the requested HIT into the turkee_tasks table.  The turkee_tasks entry stores (among other things) the HIT URL and HIT ID (as returned from the Mechanical Turk API call).
+This will insert a row for the requested HIT into the turkee_tasks table.  The turkee_tasks entry stores (along with the other properties) the HIT URL (e.g. http://workersandbox.mturk.com/mturk/preview?groupId=1HGHJJGHQSJB7WMWJ33YS8WM169XNIL ) and HIT ID (e.g. 1J1EXO8SUQ3URTTUYGHJ7EKUT11 ).  These values are returned from Mechanical Turk when the HIT request is posted.
 
-The HIT will direct the Turk workers to the #new method URL of your model.  With the above request, the Turkers would be directed to the form at http://www.yourapp.com/surveys/new
+When a Turk worker views your HIT, the HIT will display your form within an iFrame.  With the above example, Mechanical Turk will open an iFrame for the HIT assignment displaying the form http://www.yourapp.com/surveys/new
 
 5) Allow some time for the Mechanical Turk workers ("Turkers") to respond to your HIT.
 
 6) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
-    rake turkee::getresults
+    rake turkee::get_all_results
 
 Rerun this task periodically to retrieve newly entered form values.  You can setup this task as a cronjob to automate this.
 
     crontab -e
 
     # E.g. run every five minutes
-    */5 * * * * cd /var/www/your/turk/application && rake turkee:getresults
+    */5 * * * * cd /var/www/your/turk/application && rake turkee:get_all_results
 
 Or you can directly call :
 

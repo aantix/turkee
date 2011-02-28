@@ -23,7 +23,6 @@ begin
     gem.email = "jjones@aantix.com"
     gem.homepage = "http://github.com/aantix/turkee"
     gem.authors = ["Jim Jones"]
-    gem.add_development_dependency "rspec", ">= 1.2.9"
     gem.add_development_dependency "rturk", ">= 2.3.0"
     gem.add_development_dependency "lockfile", ">= 1.4.3"
     gem.post_install_message = INSTALL_MESSAGE

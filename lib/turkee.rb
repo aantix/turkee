@@ -196,7 +196,7 @@ module Turkee
       end
 
       # concat(form_tag(options.delete(:url) || {}, options.delete(:html) || {}))
-      concat(form_tag(mturk_url))
+      concat(form_tag(mturk_url, options.delete(:html) || {}))
       concat("<input type=\"hidden\" id=\"assignmentId\" name=\"assignmentId\" value=\"#{assignment_id}\"/>")
       fields_for(object_name, *(args << options), &proc)
       concat('</form>'.html_safe)
