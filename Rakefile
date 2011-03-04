@@ -11,6 +11,11 @@ begin
 
   For instructions on gem usage, visit:
     http://github.com/aantix/turkee#readme
+
+  ** If you like the Turkee gem, please click the "watch" button on the
+  Github project page.  You'll make me smile and feel appreciated. :)
+    http://github.com/aantix/turkee
+
   ========================================================================
   -- Gobble, gobble.
   }

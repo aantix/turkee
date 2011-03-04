@@ -89,7 +89,7 @@ module Turkee
         # hit.qualifications.add :approval_rate, { :gt => 80 }
       end
 
-      TurkeeTask.create(:sandbox             => (Rails.env == 'production' ? false : true),
+      TurkeeTask.create(:sandbox             => RTurk.sandbox?,
                         :hit_title           => hit_title,    :hit_description     => hit_description,
                         :hit_reward          => reward.to_f,  :hit_num_assignments => num_assignments.to_i,
                         :hit_lifetime        => lifetime,     :form_url            => f_url,
@@ -197,14 +197,12 @@ module Turkee
       concat("<input type=\"hidden\" id=\"assignmentId\" name=\"assignmentId\" value=\"#{assignment_id}\"/>")
       fields_for(object_name, *(args << options), &proc)
       concat('</form>'.html_safe)
-      # concat('<script type="text/javascript">Event.observe(window, \'load\', function() {mturk_form_init(\''+object_name.to_s.underscore+'\')});</script>')
       self
     end
 
     # Returns the external Mechanical Turk url used to post form data based on whether RTurk is cofigured
     #   for sandbox use or not.
     def mturk_url
-      # Rails.env == 'production' ? "https://www.mturk.com/mturk/externalSubmit" : "https://workersandbox.mturk.com/mturk/externalSubmit"
       RTurk.sandbox? ? "https://workersandbox.mturk.com/mturk/externalSubmit" : "https://www.mturk.com/mturk/externalSubmit"
     end
 

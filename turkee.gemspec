@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{turkee}
-  s.version = "1.0.3"
+  s.version = "1.0.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jim Jones"]
-  s.date = %q{2011-02-27}
+  s.date = %q{2011-03-03}
   s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [
@@ -35,6 +35,11 @@ Gem::Specification.new do |s|
 
   For instructions on gem usage, visit:
     http://github.com/aantix/turkee#readme
+
+  ** If you like the Turkee gem, please click the "watch" button on the
+  Github project page.  You'll make me smile and feel appreciated. :)
+    http://github.com/aantix/turkee
+
   ========================================================================
   -- Gobble, gobble.
   }
