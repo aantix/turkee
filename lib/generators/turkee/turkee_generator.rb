@@ -1,7 +1,7 @@
 require 'rails/generators'
 require 'rails/generators/migration'
 
-class TurkeeGenerator < Rails::Generator::Base
+class TurkeeGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
   
   # Implement the required interface for Rails::Generators::Migration.
