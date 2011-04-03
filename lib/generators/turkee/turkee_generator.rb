@@ -16,13 +16,23 @@ class TurkeeGenerator < Rails::Generators::Base
 
   source_root File.expand_path("../templates", __FILE__)
 
-  desc "Copies needed migrations to project."
+  desc "Creates initializer and migrations."
   
-  def create_turkee_tasks
-    migration_template "turkee_migration.rb.erb", "db/migrate/create_turkee_tasks.rb"
+  def create_initializer
+    initializer("turkee.rb") do
+      puts "AWSACCESSKEYID      = 'XXXXXXXXXXXXXXXXXX'"
+      puts "AWSACCESSKEY        = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'"
+      puts "RTurk::logger.level = Logger::DEBUG"
+      puts "RTurk.setup(AWSACCESSKEYID, AWSACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))"
+    end
   end
   
-  def create_turkee_imported_assignments
+  def create_migrations
+    migration_template "turkee_migration.rb.erb", "db/migrate/create_turkee_tasks.rb"
+    
+    # Need this sleep so that we don't get the same migration timestamp for both migrations
+    sleep 1
+    
     migration_template "turkee_imported_assignments.rb.erb", "db/migrate/create_turkee_imported_assignments.rb"
   end
 end
