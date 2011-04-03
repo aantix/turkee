@@ -19,12 +19,7 @@ class TurkeeGenerator < Rails::Generators::Base
   desc "Creates initializer and migrations."
   
   def create_initializer
-    initializer("turkee.rb") do
-      AWSACCESSKEYID      = 'XXXXXXXXXXXXXXXXXX'
-      AWSACCESSKEY        = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
-      RTurk::logger.level = Logger::DEBUG
-      RTurk.setup(AWSACCESSKEYID, AWSACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))
-    end
+    template "turkee.rb", "config/initializers/turkee.rb"
   end
   
   def create_migrations
