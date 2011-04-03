@@ -22,7 +22,7 @@ class TurkeeGenerator < Rails::Generators::Base
     migration_template "turkee_migration.rb.erb", "db/migrate/create_turkee_tasks.rb"
   end
   
-  def create_turkee_tasks
+  def create_turkee_imported_assignments
     migration_template "turkee_imported_assignments.rb.erb", "db/migrate/create_turkee_imported_assignments.rb"
   end
 end
