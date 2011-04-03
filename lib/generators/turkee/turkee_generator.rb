@@ -1,15 +1,28 @@
-class TurkeeGenerator < Rails::Generator::Base
+require 'rails/generators'
+require 'rails/generators/migration'
 
-  def manifest
-    record do |m|
-      m.migration_template "turkee_migration.rb.erb", File.join('db', 'migrate'), :migration_file_name => 'create_turkee_tasks'
-      m.sleep 1   # Need this sleep so that we don't get the same migration timestamp for both migrations
-      m.migration_template "turkee_imported_assignments.rb.erb", File.join('db', 'migrate'), :migration_file_name => 'create_turkee_imported_assignments'
+class TurkeeGenerator < Rails::Generator::Base
+  include Rails::Generators::Migration
+  
+  # Implement the required interface for Rails::Generators::Migration.
+  # taken from http://github.com/rails/rails/blob/master/activerecord/lib/generators/active_record.rb
+  def self.next_migration_number(dirname)
+    if ActiveRecord::Base.timestamped_migrations
+      Time.now.utc.strftime("%Y%m%d%H%M%S")
+    else
+      "%.3d" % (current_migration_number(dirname) + 1)
     end
   end
 
-  def banner
-    %{Usage: #{$0} #{spec.name}\nCopies needed migrations to project.}
-  end
+  source_root File.expand_path("../templates", __FILE__)
 
+  desc "Copies needed migrations to project."
+  
+  def create_turkee_tasks
+    migration_template "turkee_migration.rb.erb", "db/migrate/create_turkee_tasks.rb"
+  end
+  
+  def create_turkee_tasks
+    migration_template "turkee_imported_assignments.rb.erb", "db/migrate/create_turkee_imported_assignments.rb"
+  end
 end
