@@ -20,10 +20,10 @@ class TurkeeGenerator < Rails::Generators::Base
   
   def create_initializer
     initializer("turkee.rb") do
-      puts "AWSACCESSKEYID      = 'XXXXXXXXXXXXXXXXXX'"
-      puts "AWSACCESSKEY        = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'"
-      puts "RTurk::logger.level = Logger::DEBUG"
-      puts "RTurk.setup(AWSACCESSKEYID, AWSACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))"
+      AWSACCESSKEYID      = 'XXXXXXXXXXXXXXXXXX'
+      AWSACCESSKEY        = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+      RTurk::logger.level = Logger::DEBUG
+      RTurk.setup(AWSACCESSKEYID, AWSACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))
     end
   end
   
