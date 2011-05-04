@@ -32,7 +32,7 @@ begin
     gem.add_development_dependency "lockfile", ">= 1.4.3"
     gem.post_install_message = INSTALL_MESSAGE
     gem.require_path = 'lib'
-    gem.files = %w(MIT-LICENSE README.textile Rakefile init.rb) + Dir.glob("{generators,lib,spec}/**/*")
+    gem.files = %w(MIT-LICENSE README.textile Rakefile init.rb) + Dir.glob("{lib,spec}/**/*")
     
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end

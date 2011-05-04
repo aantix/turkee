@@ -17,7 +17,7 @@ module Turkee
     # belongs_to :task, :polymorphic => true
     HIT_FRAMEHEIGHT     = 1000
 
-    named_scope :unprocessed_hits, :conditions => ['complete = ?', false]
+    scope :unprocessed_hits, :conditions => ['complete = ?', false]
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
