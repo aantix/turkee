@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.version = "1.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Jim Jones"]
-  s.date = %q{2011-05-03}
+  s.authors = [%q{Jim Jones}]
+  s.date = %q{2011-05-16}
   s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [
@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
     "README.rdoc"
   ]
   s.files = [
+    "Gemfile",
     "Rakefile",
     "lib/generators/turkee/templates/turkee.rb",
     "lib/generators/turkee/templates/turkee_imported_assignments.rb.erb",
@@ -44,16 +45,29 @@ Gem::Specification.new do |s|
   ========================================================================
   -- Gobble, gobble.
   }
-  s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.7}
+  s.require_paths = [%q{lib}]
+  s.rubygems_version = %q{1.8.1}
   s.summary = %q{Turkee makes dealing with Amazon's Mechnical Turk a breeze.}
-  s.test_files = [
-    "spec/spec_helper.rb",
-    "spec/turkee_spec.rb"
-  ]
 
-  s.add_dependency(%q<rails>, ["~> 3.0.7"])
-  s.add_dependency(%q<rturk>, [">= 2.3.0"])
-  s.add_dependency(%q<lockfile>, [">= 1.4.3"])
+  if s.respond_to? :specification_version then
+    s.specification_version = 3
+
+    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<turkee>, [">= 0"])
+      s.add_runtime_dependency(%q<rails>, [">= 3.0.7"])
+      s.add_runtime_dependency(%q<rturk>, [">= 2.3.0"])
+      s.add_runtime_dependency(%q<lockfile>, [">= 1.4.3"])
+    else
+      s.add_dependency(%q<turkee>, [">= 0"])
+      s.add_dependency(%q<rails>, [">= 3.0.7"])
+      s.add_dependency(%q<rturk>, [">= 2.3.0"])
+      s.add_dependency(%q<lockfile>, [">= 1.4.3"])
+    end
+  else
+    s.add_dependency(%q<turkee>, [">= 0"])
+    s.add_dependency(%q<rails>, [">= 3.0.7"])
+    s.add_dependency(%q<rturk>, [">= 2.3.0"])
+    s.add_dependency(%q<lockfile>, [">= 1.4.3"])
+  end
 end
 
