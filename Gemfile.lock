@@ -1,0 +1,37 @@
+PATH
+  remote: .
+  specs:
+    turkee (1.1.0)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    fakeweb (1.3.0)
+    git (1.2.5)
+    jeweler (1.6.0)
+      bundler (~> 1.0.0)
+      git (>= 1.2.5)
+      rake
+    lockfile (1.4.3)
+    mime-types (1.16)
+    nokogiri (1.4.4)
+    rake (0.8.7)
+    rest-client (1.6.1)
+      mime-types (>= 1.16)
+    rspec (1.3.2)
+    rturk (2.3.6)
+      fakeweb
+      jeweler
+      nokogiri
+      nokogiri (>= 1.4.1)
+      rest-client
+      rest-client (>= 1.4.0)
+      rspec (~> 1.3.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  lockfile (>= 1.4.3)
+  rturk (>= 2.3.0)
+  turkee!

@@ -1,8 +1,8 @@
 require 'rake'
 require 'turkee'
 
-include ActionController::PolymorphicRoutes
-include ActionView::Helpers::UrlHelper
+#include ActionController::PolymorphicRoutes
+#include ActionView::Helpers::UrlHelper
 
 # clear && rake turkee:post_hit['Test title','Test desc','Joke',3,0.05,1] --trace
 

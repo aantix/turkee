@@ -4,41 +4,47 @@ Seamlessly convert your Rails forms for use on Mechanical Turk.  Then, easily im
 
 External forms are created using a simple form helper.  HITs are created by issuing a rake command.  Retrieving submitted response data and importing that data into your model(s) requires just one more rake command.
 
-== Examples
 
-If you'd like to jump straight into code, check out the {Turkee Iterator}[https://github.com/aantix/Turkee-Iterator] example.
+== Rails 2
 
-== Dependencies
+I'm no longer supporting Rails 2.x.  If you have Rails 2 changes, message me and we can look to maintaing a Rails 2.x branch.
 
-Make sure that the rturk gem is installed configured with your Amazon Turk credentials. I created a config/initializers/turk_task_config.rb file with the following in it:
 
-    TURKTASK_AWSACCESSKEYID = 'XXXXXXXXXXXXXXXXXX'
-    TURKTASK_AWSACCESSKEY   = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+== Mechanical Turk API Changes
 
-    RTurk::logger.level     = Logger::DEBUG
-    RTurk.setup(AWSACCESSKEYID, AWSACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))
+Mechanical Turk is now requiring that the hitId, workerId, and the turkSubmitTo parameters be passed in along with the assignmentId and form parameters.
+
+What does this mean for you?  Not much besides the fact that now when you construct your forms using turkee_form_for, you'll be passing in your entire params hash instead of just the assignment_id.  The code snippet below reflect this change.
+
 
 == Install
 
-Install the Turkee gem:
-
-    sudo gem install turkee
-
-For Rails 2, add it to your environment.rb configuration as a gem dependency:
-
-    config.gem 'turkee'
-
-For Rails 3, add it to your Gemfile as a gem dependency, then do a 'bundle install':
+Add turkee to your Gemfile as a gem dependency, then do a 'bundle install':
 
     gem 'turkee'
 
 To access the Turkee rake tasks, add the following to your application's Rakefile:
     require 'tasks/turkee'
 
-Run the turkee generator from your application directory to copy the needed migrations into your application:
+Run the turkee generator from your application directory to copy the needed migrations and config/initializer into your application:
 
-    ./script/generate turkee    # Rails 2
-    rails g turkee              # Rails 3
+    rails g turkee
+
+If you haven't created a Mechanical Turk account, surf on over to {Amazon's Web Services}[http://aws.amazon.com/] and create an AWS account.
+
+Once you have your account created, you can access your AWS access key and secret access key from {here.}[https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key]
+
+
+== Configuration
+
+Inside the config/initializers directory, you'll see the file turkee.rb.  Edit that file with your Amazon credenti.
+
+    AWSACCESSKEYID      = 'XXXXXXXXXXXXXXXXXX'
+    AWSSECRETACCESSKEY  = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+
+    RTurk::logger.level     = Logger::DEBUG
+    RTurk.setup(AWSACCESSKEYID, AWSSECRETACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))
+
 
 == Use
 
@@ -50,8 +56,7 @@ Run the turkee generator from your application directory to copy the needed migr
     class SurveysController < ApplicationController
 
         def new
-            @assignment_id = params[:assignmentId]
-            @disabled      = Turkee::TurkeeFormHelper::disable_form_fields?(@assignment_id)
+            @disabled      = Turkee::TurkeeFormHelper::disable_form_fields?(params)
 
             # If you wanted to find the associated turkee_task, you could do a find by hitId
             #  Not necessary in a simple example.
@@ -62,7 +67,8 @@ Run the turkee generator from your application directory to copy the needed migr
         end
 
 3) Change your forms to use the form helper.
-    <% turkee_form_for(@survey, @assignment_id) do |f| %>
+
+    <% turkee_form_for(@survey, params) do |f| %>
         <p><%= f.text_area :value, :disabled => @disabled %></p>
         <p><%= f.submit 'Create', :disabled => @disabled %></p>
     <% end %>

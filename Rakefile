@@ -28,11 +28,12 @@ begin
     gem.email = "jjones@aantix.com"
     gem.homepage = "http://github.com/aantix/turkee"
     gem.authors = ["Jim Jones"]
-    gem.add_development_dependency "rturk", ">= 2.3.0"
-    gem.add_development_dependency "lockfile", ">= 1.4.3"
+    gem.add_dependency(%q<rails>, [">= 3.0.7"])
+    gem.add_dependency(%q<rturk>, [">= 2.3.0"])
+    gem.add_dependency(%q<lockfile>, [">= 1.4.3"])
     gem.post_install_message = INSTALL_MESSAGE
     gem.require_path = 'lib'
-    gem.files = %w(MIT-LICENSE README.textile Rakefile init.rb) + Dir.glob("{lib,spec}/**/*")
+    gem.files = %w(MIT-LICENSE README.textile Gemfile Rakefile init.rb) + Dir.glob("{lib,spec}/**/*")
     
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end

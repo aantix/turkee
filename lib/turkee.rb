@@ -159,9 +159,11 @@ module Turkee
     end
 
     def self.form_url(host, typ)
-      @app ||= ActionController::Integration::Session.new
+      @app ||= ActionController::Integration::Session.new(Rails.application)
       #@app.send("new_#{typ.to_s.underscore}_url(:host => '#{host}')")  # Not sure why app does respond when :host is passed...
-      (host + @app.send("new_#{typ.to_s.underscore}_path")) # Workaround for now. :(
+      url = (host + @app.send("new_#{typ.to_s.underscore}_path")) # Workaround for now. :(
+      puts "form_url = #{url}"
+      url
     end
 
   end
@@ -169,35 +171,42 @@ module Turkee
 
   module TurkeeFormHelper
 
-    # Rails 2.3.8 form_for implementation with the exception of the form action url
+    # Rails 3.0.7 form_for implementation with the exception of the form action url
     # will always point to the Amazon externalSubmit interface and you must pass in the
     # assignment_id parameter.
-    def turkee_form_for(record_or_name_or_array, assignment_id, *args, &proc)
+    def turkee_form_for(record_or_name_or_array, params, *args, &proc)
       raise ArgumentError, "Missing block" unless block_given?
+      raise ArgumentError, "turkee_form_for now requires that you pass in the entire params hash, instead of just the assignmentId value. " unless params.is_a?(Hash)
 
       options = args.extract_options!
 
       case record_or_name_or_array
-        when String, Symbol
-          object_name = record_or_name_or_array
-        when Array
-          object = record_or_name_or_array.last
-          object_name = ActionController::RecordIdentifier.singular_class_name(object)
-          apply_form_for_options!(record_or_name_or_array, options)
-          args.unshift object
-        else
-          object = record_or_name_or_array
-          object_name = ActionController::RecordIdentifier.singular_class_name(object)
-          apply_form_for_options!([object], options)
-          args.unshift object
+      when String, Symbol
+        ActiveSupport::Deprecation.warn("Using form_for(:name, @resource) is deprecated. Please use form_for(@resource, :as => :name) instead.", caller) unless args.empty?
+        object_name = record_or_name_or_array
+      when Array
+        object = record_or_name_or_array.last
+        object_name = options[:as] || ActiveModel::Naming.singular(object)
+        apply_form_for_options!(record_or_name_or_array, options)
+        args.unshift object
+      else
+        object = record_or_name_or_array
+        object_name = options[:as] || ActiveModel::Naming.singular(object)
+        apply_form_for_options!([object], options)
+        args.unshift object
       end
 
-      # concat(form_tag(options.delete(:url) || {}, options.delete(:html) || {}))
-      concat(form_tag(mturk_url, options.delete(:html) || {}))
-      concat("<input type=\"hidden\" id=\"assignmentId\" name=\"assignmentId\" value=\"#{assignment_id}\"/>")
-      fields_for(object_name, *(args << options), &proc)
-      concat('</form>'.html_safe)
-      self
+      (options[:html] ||= {})[:remote] = true if options.delete(:remote)
+
+      output = form_tag(mturk_url, options.delete(:html) || {})
+      params.each do |k,v|
+        unless k =~ /^action$/i || k =~ /^controller$/i
+          output.safe_concat("<input type=\"hidden\" id=\"#{k}\" name=\"#{CGI.escape(k)}\" value=\"#{CGI.escape(v)}\"/>")
+        end
+      end
+      options[:disabled] = true if params[:assignmentId].nil? || Turkee::TurkeeFormHelper::disable_form_fields?(params[:assignmentId])
+      output << fields_for(object_name, *(args << options), &proc)
+      output.safe_concat('</form>')
     end
 
     # Returns the external Mechanical Turk url used to post form data based on whether RTurk is cofigured
@@ -207,10 +216,10 @@ module Turkee
     end
 
     # Returns whether the form fields should be disabled or not (based on the assignment_id)
-    def self.disable_form_fields?(assignment_id)
+    def self.disable_form_fields?(assignment)
+      assignment_id = assignment.is_a?(Hash) ? assignment[:assignmentId] : assignment
       (assignment_id.nil? || assignment_id == 'ASSIGNMENT_ID_NOT_AVAILABLE')
     end
-
   end
 
 end

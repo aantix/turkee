@@ -1,5 +1,8 @@
+# Go to this page https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key
+# to retrieve your AWS/Mechanical Turk access keys.
+
 AWSACCESSKEYID      = 'XXXXXXXXXXXXXXXXXX'
-AWSACCESSKEY        = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+AWSSECRETACCESSKEY  = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYY'
 
 RTurk::logger.level = Logger::DEBUG
-RTurk.setup(AWSACCESSKEYID, AWSACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))
+RTurk.setup(AWSACCESSKEYID, AWSSECRETACCESSKEY, :sandbox => (Rails.env == 'production' ? false : true))
