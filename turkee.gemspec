@@ -49,25 +49,24 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.8.1}
   s.summary = %q{Turkee makes dealing with Amazon's Mechnical Turk a breeze.}
 
-  if s.respond_to? :specification_version then
-    s.specification_version = 3
+  s.add_dependency(%q<turkee>, [">= 0"])
+  s.add_dependency(%q<rails>, [">= 3.0.7"])
+  s.add_dependency(%q<rturk>, [">= 2.3.0"])
+  s.add_dependency(%q<lockfile>, [">= 1.4.3"])
 
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<turkee>, [">= 0"])
-      s.add_runtime_dependency(%q<rails>, [">= 3.0.7"])
-      s.add_runtime_dependency(%q<rturk>, [">= 2.3.0"])
-      s.add_runtime_dependency(%q<lockfile>, [">= 1.4.3"])
-    else
-      s.add_dependency(%q<turkee>, [">= 0"])
-      s.add_dependency(%q<rails>, [">= 3.0.7"])
-      s.add_dependency(%q<rturk>, [">= 2.3.0"])
-      s.add_dependency(%q<lockfile>, [">= 1.4.3"])
-    end
-  else
-    s.add_dependency(%q<turkee>, [">= 0"])
-    s.add_dependency(%q<rails>, [">= 3.0.7"])
-    s.add_dependency(%q<rturk>, [">= 2.3.0"])
-    s.add_dependency(%q<lockfile>, [">= 1.4.3"])
+  s.add_development_dependency "guard-rspec"
+  s.add_development_dependency "spork", "> 0.9.0.rc"
+  s.add_development_dependency 'growl', '>= 1.0.3'
+  s.add_development_dependency "guard-spork"
+
+  # Since Growl is Mac OS X the `if` test only installs those gems for the development profile on OS X
+  if RUBY_PLATFORM.downcase.include?("darwin")
+    s.add_development_dependency 'rb-fsevent', ">= 0.4.3.1"
   end
+
+  # RSpec has to be in both test and development so that rake tasks and generators
+  # are available without having to explicitly switch the environment to 'test'
+  s.add_development_dependency 'factory_girl', '>= 1.3.2'
+  s.add_development_dependency 'rspec', '= 2.5.0'
 end
 
