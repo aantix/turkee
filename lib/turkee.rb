@@ -42,6 +42,8 @@ module Turkee
               param_hash = Rack::Utils.parse_nested_query(params)
               model      = find_model(param_hash)
 
+              puts "Params = #{params}"
+
               next if model.nil?
               result = model.create(param_hash[model.to_s.underscore])
 
@@ -172,12 +174,12 @@ module Turkee
     #  x = {:submit = 'Create', :iteration_vote => {:iteration_id => 1}}
     #  The above _should_ return an IterationVote model
     def self.find_model(param_hash)
-      #param_hash.each do |k, v|
-      #  if v.is_a?(Hash)
-      #    model = Object::const_get(k.to_s.camelize) rescue next
-      #    return model if model.descends_from_active_record?
-      #  end
-      #end
+      param_hash.each do |k, v|
+        if v.is_a?(Hash)
+          model = Object::const_get(k.to_s.camelize) rescue next
+          return model if model.descends_from_active_record?
+        end
+      end
       nil
     end
 
