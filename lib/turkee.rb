@@ -42,8 +42,6 @@ module Turkee
               param_hash = Rack::Utils.parse_nested_query(params)
               model      = find_model(param_hash)
 
-              puts "Params = #{params}"
-
               next if model.nil?
               result = model.create(param_hash[model.to_s.underscore])
 
@@ -187,7 +185,6 @@ module Turkee
       @app ||= ActionController::Integration::Session.new(Rails.application)
       #@app.send("new_#{typ.to_s.underscore}_url(:host => '#{host}')")  # Not sure why app does respond when :host is passed...
       url = (host + @app.send("new_#{typ.to_s.underscore}_path")) # Workaround for now. :(
-      puts "form_url = #{url}"
       url
     end
 
@@ -224,9 +221,6 @@ module Turkee
 
       output = form_tag(mturk_url, default_options.merge!(options.delete(:html)))
       params.each do |k,v|
-        puts "k = #{k.inspect}"
-        puts "v = #{v.inspect}"
-
         unless k =~ /^action$/i || k =~ /^controller$/i || v.class != String
           output.safe_concat("<input type=\"hidden\" id=\"#{k}\" name=\"#{CGI.escape(k)}\" value=\"#{CGI.escape(v)}\"/>")
         end
