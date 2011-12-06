@@ -32,23 +32,17 @@ module Turkee
 
           turks.each do |turk|
             hit   = RTurk::Hit.new(turk.hit_id)
-            puts "Model name = #{turk.task_type.to_s.camelize}"
-            model = Object::const_get(turk.task_type.to_s.camelize) #rescue next
-            puts "Model = #{model.inspect}"
 
+            models = []
             hit.assignments.each do |assignment|
               next unless assignment_submitted?(assignment)
               next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
 
               params     = assignment_params(assignment)
               param_hash = Rack::Utils.parse_nested_query(params)
+              model      = find_model(param_hash)
 
-              puts "Params = #{params}"
-
-              #model      = find_model(param_hash)
-              #
-              #next if model.nil?
-
+              next if model.nil?
               result = model.create(param_hash[model.to_s.underscore])
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
@@ -56,10 +50,9 @@ module Turkee
               process_result(assignment, result)
 
               TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
-
             end
 
-            check_hit_completeness(hit, turk, model)
+            check_hit_completeness(hit, turk, models)
           end
         end
       rescue Lockfile::MaxTriesLockError => e
@@ -139,14 +132,14 @@ module Turkee
       @logger ||= Logger.new($stderr)
     end
 
-    def self.check_hit_completeness(hit, turk, model)
+    def self.check_hit_completeness(hit, turk, models)
       if hit.completed_assignments == turk.hit_num_assignments
         hit.dispose!
 
         turk.complete = true
         turk.save
 
-        model.hit_complete(turk) if model.respond_to?(:hit_complete)
+        models.each{|model| model.hit_complete(turk) if model.respond_to?(:hit_complete)}
       end
     end
 
