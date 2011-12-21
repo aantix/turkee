@@ -28,43 +28,31 @@ module Turkee
         # Using a lockfile to prevent multiple calls to Amazon.
         Lockfile.new('/tmp/turk_processor.lock', :max_age => 3600, :retries => 10) do
 
-          turks = turkee_task.nil? ? TurkeeTask.unprocessed_hits : Array.new << turkee_task
+          turks = task_items(turkee_task)
 
           turks.each do |turk|
-            hit = RTurk::Hit.new(turk.hit_id)
+            hit   = RTurk::Hit.new(turk.hit_id)
 
+            models = []
             hit.assignments.each do |assignment|
-              next unless assignment.status == 'Submitted'
+              next unless submitted?(assignment.status)
               next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
 
-              params     = assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
+              params     = assignment_params(assignment.answers)
               param_hash = Rack::Utils.parse_nested_query(params)
               model      = find_model(param_hash)
 
               next if model.nil?
-
               result = model.create(param_hash[model.to_s.underscore])
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
               #  otherwise just approve it by default
-              if result.errors.size > 0
-                logger.info "Errors : #{result.inspect}"
-                assignment.reject!('Failed to enter proper data.')
-              elsif result.respond_to?(:approve?)
-                logger.debug "Approving : #{result.inspect}"
-                result.approve? ? assignment.approve!('') : assignment.reject!('Rejected criteria.')
-              else
-                assignment.approve!('')
-              end
+              process_result(assignment, result)
 
               TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
-
             end
 
-            if hit.completed_assignments == turk.hit_num_assignments
-              hit.dispose!
-              model.hit_complete(turk) if model.respond_to?(:hit_complete)
-            end
+            check_hit_completeness(hit, turk, models)
           end
         end
       rescue Lockfile::MaxTriesLockError => e
@@ -144,6 +132,43 @@ module Turkee
       @logger ||= Logger.new($stderr)
     end
 
+    def self.check_hit_completeness(hit, turk, models)
+      mark_completed(hit, models, turk) if hit.completed_assignments == turk.hit_num_assignments
+    end
+
+    def self.mark_completed(hit, models, turk)
+      hit.dispose!
+
+      turk.complete = true
+      turk.save
+
+      models.each { |model| model.hit_complete(turk) if model.respond_to?(:hit_complete) }
+    end
+
+    def self.process_result(assignment, result)
+      if result.errors.size > 0
+        logger.info "Errors : #{result.inspect}"
+        assignment.reject!('Failed to enter proper data.')
+      elsif result.respond_to?(:approve?)
+        logger.debug "Approving : #{result.inspect}"
+        result.approve? ? assignment.approve!('') : assignment.reject!('Rejected criteria.')
+      else
+        assignment.approve!('')
+      end
+    end
+
+    def self.task_items(turkee_task)
+      turkee_task.nil? ? TurkeeTask.unprocessed_hits : Array.new << turkee_task
+    end
+
+    def self.submitted?(status)
+      (status == 'Submitted')
+    end
+
+    def self.assignment_params(answers)
+      answers.map { |k, v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}" }.join('&')
+    end
+
     # Method looks at the parameter and attempts to find an ActiveRecord model
     #  in the current app that would match the properties of one of the nested hashes
     #  x = {:submit = 'Create', :iteration_vote => {:iteration_id => 1}}
@@ -152,7 +177,7 @@ module Turkee
       param_hash.each do |k, v|
         if v.is_a?(Hash)
           model = Object::const_get(k.to_s.camelize) rescue next
-          return model if model.descends_from_active_record?
+          return model if model.descends_from_active_record? rescue next
         end
       end
       nil
@@ -162,7 +187,6 @@ module Turkee
       @app ||= ActionController::Integration::Session.new(Rails.application)
       #@app.send("new_#{typ.to_s.underscore}_url(:host => '#{host}')")  # Not sure why app does respond when :host is passed...
       url = (host + @app.send("new_#{typ.to_s.underscore}_path")) # Workaround for now. :(
-      puts "form_url = #{url}"
       url
     end
 
@@ -171,41 +195,40 @@ module Turkee
 
   module TurkeeFormHelper
 
-    # Rails 3.0.7 form_for implementation with the exception of the form action url
+    # Rails 3.1.1 form_for implementation with the exception of the form action url
     # will always point to the Amazon externalSubmit interface and you must pass in the
     # assignment_id parameter.
-    def turkee_form_for(record_or_name_or_array, params, *args, &proc)
+    def turkee_form_for(record, params, options = {}, &proc)
       raise ArgumentError, "Missing block" unless block_given?
       raise ArgumentError, "turkee_form_for now requires that you pass in the entire params hash, instead of just the assignmentId value. " unless params.is_a?(Hash)
+      options[:html] ||= {}
 
-      options = args.extract_options!
-
-      case record_or_name_or_array
+      case record
       when String, Symbol
-        ActiveSupport::Deprecation.warn("Using form_for(:name, @resource) is deprecated. Please use form_for(@resource, :as => :name) instead.", caller) unless args.empty?
-        object_name = record_or_name_or_array
-      when Array
-        object = record_or_name_or_array.last
-        object_name = options[:as] || ActiveModel::Naming.singular(object)
-        apply_form_for_options!(record_or_name_or_array, options)
-        args.unshift object
+        object_name = record
+        object      = nil
       else
-        object = record_or_name_or_array
-        object_name = options[:as] || ActiveModel::Naming.singular(object)
-        apply_form_for_options!([object], options)
-        args.unshift object
+        object      = record.is_a?(Array) ? record.last : record
+        object_name = options[:as] || ActiveModel::Naming.param_key(object)
+        apply_form_for_options!(record, options)
       end
 
-      (options[:html] ||= {})[:remote] = true if options.delete(:remote)
+      options[:html][:remote] = options.delete(:remote) if options.has_key?(:remote)
+      options[:html][:method] = options.delete(:method) if options.has_key?(:method)
+      options[:html][:authenticity_token] = options.delete(:authenticity_token)
 
-      output = form_tag(mturk_url, options.delete(:html) || {})
+      builder = options[:parent_builder] = instantiate_builder(object_name, object, options, &proc)
+      fields_for = fields_for(object_name, object, options, &proc)
+      default_options = builder.multipart? ? { :multipart => true } : {}
+
+      output = form_tag(mturk_url, default_options.merge!(options.delete(:html)))
       params.each do |k,v|
-        unless k =~ /^action$/i || k =~ /^controller$/i
+        unless k =~ /^action$/i || k =~ /^controller$/i || v.class != String
           output.safe_concat("<input type=\"hidden\" id=\"#{k}\" name=\"#{CGI.escape(k)}\" value=\"#{CGI.escape(v)}\"/>")
         end
       end
       options[:disabled] = true if params[:assignmentId].nil? || Turkee::TurkeeFormHelper::disable_form_fields?(params[:assignmentId])
-      output << fields_for(object_name, *(args << options), &proc)
+      output << fields_for
       output.safe_concat('</form>')
     end
 
