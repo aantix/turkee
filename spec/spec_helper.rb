@@ -1,12 +1,33 @@
 require 'rubygems'
-require "bundler/setup" 
+require "bundler/setup"
 
-# require File.expand_path("../../config/environment", __FILE__)
 require 'factory_girl'
 require 'rspec'
 require 'spork'
 require 'growl'
-  
+require 'rails'
+require 'rturk'
+require 'lockfile'
+require 'active_record'
+
+ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
+ActiveRecord::Schema.define(:version => 1) do
+  create_table :turkee_tasks do |t|
+    t.string   "hit_url"
+    t.boolean  "sandbox"
+    t.string   "task_type"
+    t.text     "hit_title"
+    t.text     "hit_description"
+    t.string   "hit_id"
+    t.decimal  "hit_reward", :precision => 10, :scale => 2
+    t.integer  "hit_num_assignments"
+    t.integer  "hit_lifetime"
+    t.string   "form_url"
+    t.boolean  "complete"
+  end
+end
+
+
 Spork.prefork do
   # Loading more in this block will cause your tests to run faster. However,
   # if you change any configuration or code from libraries loaded here, you'll
@@ -35,11 +56,6 @@ Spork.prefork do
 end
 
 Spork.each_run do
-  # This code will be run each time you run your specs.
-  Dir["#{File.dirname(__FILE__)}/../lib/**/*.rb"].each {|f| require f}
-  Dir["#{File.dirname(__FILE__)}/../lib/date_time/**/*.rb"].each {|f| require f}
-  
-  Dir["#{File.dirname(__FILE__)}/factories/**/*.rb"].each {|f| require f}
-  Dir["#{File.dirname(__FILE__)}/../normalization/**/*.rb"].each {|f| require f}
-  Dir["#{File.dirname(__FILE__)}/../transformation/**/*.rb"].each {|f| require f}
+  $LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
+  Dir["#{File.dirname(__FILE__)}/../lib/**/*.rb"].each {|f| puts "f = #{f}"; require f}
 end

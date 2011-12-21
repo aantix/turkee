@@ -35,10 +35,10 @@ module Turkee
 
             models = []
             hit.assignments.each do |assignment|
-              next unless assignment_submitted?(assignment)
+              next unless submitted?(assignment.status)
               next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
 
-              params     = assignment_params(assignment)
+              params     = assignment_params(assignment.answers)
               param_hash = Rack::Utils.parse_nested_query(params)
               model      = find_model(param_hash)
 
@@ -133,14 +133,16 @@ module Turkee
     end
 
     def self.check_hit_completeness(hit, turk, models)
-      if hit.completed_assignments == turk.hit_num_assignments
-        hit.dispose!
+      mark_completed(hit, models, turk) if hit.completed_assignments == turk.hit_num_assignments
+    end
 
-        turk.complete = true
-        turk.save
+    def self.mark_completed(hit, models, turk)
+      hit.dispose!
 
-        models.each{|model| model.hit_complete(turk) if model.respond_to?(:hit_complete)}
-      end
+      turk.complete = true
+      turk.save
+
+      models.each { |model| model.hit_complete(turk) if model.respond_to?(:hit_complete) }
     end
 
     def self.process_result(assignment, result)
@@ -159,12 +161,12 @@ module Turkee
       turkee_task.nil? ? TurkeeTask.unprocessed_hits : Array.new << turkee_task
     end
 
-    def self.assignment_submitted?(assignment)
-      (assignment.status == 'Submitted')
+    def self.submitted?(status)
+      (status == 'Submitted')
     end
 
-    def self.assignment_params(assignment)
-      assignment.answers.map { |k, v| "#{CGI::escape(k)}=#{CGI::escape(v)}" }.join('&')
+    def self.assignment_params(answers)
+      answers.map { |k, v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}" }.join('&')
     end
 
     # Method looks at the parameter and attempts to find an ActiveRecord model
@@ -175,7 +177,7 @@ module Turkee
       param_hash.each do |k, v|
         if v.is_a?(Hash)
           model = Object::const_get(k.to_s.camelize) rescue next
-          return model if model.descends_from_active_record?
+          return model if model.descends_from_active_record? rescue next
         end
       end
       nil

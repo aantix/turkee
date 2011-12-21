@@ -1,0 +1,14 @@
+require 'turkee'
+Factory.define :turkee_task, :class => Turkee::TurkeeTask do |s|
+  s.hit_url "http://workersandbox.mturk.com/mturk/preview?groupId=248SVGULF395SZ65OC6S6NYNJDXAO5"
+  s.sandbox true
+  s.task_type "TestTask"
+  s.hit_title "Test Title"
+  s.hit_description "Test Desc"
+  s.hit_id "123"
+  s.hit_reward 0.05
+  s.hit_num_assignments 100
+  s.hit_lifetime 1
+  s.form_url "http://localhost/test_task/new"
+  s.complete true
+end
