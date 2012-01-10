@@ -33,7 +33,7 @@ describe Turkee::TurkeeTask do
   describe "#assignment_params" do
     it "should encode the params properly" do
       answers = {:test => "abc", :test2 => "this is a test"}
-      Turkee::TurkeeTask.assignment_params(answers).should == "test=abc&test2=this+is+a+test"
+      Turkee::TurkeeTask.assignment_params(answers).should == "test2=this+is+a+test&test=abc"
     end
   end
 

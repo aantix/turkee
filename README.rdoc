@@ -94,8 +94,6 @@ This will insert a row for the requested HIT into the turkee_tasks table.  The t
 
 When a Turk worker views your HIT, the HIT will display your form within an iFrame.  With the above example, Mechanical Turk will open an iFrame for the HIT assignment displaying the form http://www.yourapp.com/surveys/new
 
-** The application that hosts your external forms preferably should have an https interface (you're going to have to buy an SSL certificate).  If the forms are hosted on an unsecured host (http), because Mechanical Turk defaults to https, you're going to receive the ugly popup from IE regarding "mixed content" (http://msdn.microsoft.com/en-us/library/ee264315%28v=vs.85%29.aspx).
-
 5) Allow some time for the Mechanical Turk workers ("Turkers") to respond to your HIT.
 
 6) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
@@ -119,6 +117,15 @@ As for Mechanical Turk approval, if the row is created and you haven't specified
         (!response.blank? && !comment.blank?)
       end
     end
+
+== Gotchas
+
+1) There's a maximum length of 49 characters for an form input name, anything beyond that and you'll receive the message "Your request was not completed successfully." after submitting your form.  So if you have a long class name or plan to use nested form attributes (which will generate long input names), you will have to shorten their class name. Sorry.  
+
+E.g. I had a Transcription class with a has_many relation called TranscriptionSegments. I submitted a nested form.  The text input  transcription[transcription_segments_attributes][0][candidate_text] caused an error upon submission.
+
+2) The application that hosts your external forms preferably should have an https interface (you're going to have to buy an SSL certificate).  If the forms are hosted on an unsecured host (http), because Mechanical Turk defaults to https, you're going to receive the ugly popup from IE regarding "mixed content" (http://msdn.microsoft.com/en-us/library/ee264315%28v=vs.85%29.aspx).
+
 
 == Copyright
 

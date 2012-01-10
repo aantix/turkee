@@ -4,7 +4,7 @@ require 'rturk'
 require 'lockfile'
 require 'active_record'
 require 'action_view'
-require 'active_support'
+require "active_support/core_ext/object/to_query"
 require 'action_controller'
 
 module Turkee
@@ -14,7 +14,6 @@ module Turkee
   end
 
   class TurkeeTask < ActiveRecord::Base
-    # belongs_to :task, :polymorphic => true
     HIT_FRAMEHEIGHT     = 1000
 
     scope :unprocessed_hits, :conditions => ['complete = ?', false]
@@ -62,11 +61,11 @@ module Turkee
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
-    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime)
+    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, approval_rate = nil, params = {})
 
       model    = Object::const_get(typ)
       duration = lifetime.to_i
-      f_url    = form_url(host, model)
+      f_url    = form_url(host, model, params)
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
         hit.assignments = num_assignments
@@ -74,7 +73,7 @@ module Turkee
         hit.reward      = reward
         hit.lifetime    = duration.days.seconds.to_i
         hit.question(f_url, :frame_height => HIT_FRAMEHEIGHT)
-        # hit.qualifications.add :approval_rate, { :gt => 80 }
+        hit.qualifications.add :approval_rate, { :gt => approval_rate } unless approval_rate.nil?
       end
 
       TurkeeTask.create(:sandbox             => RTurk.sandbox?,
@@ -90,7 +89,7 @@ module Turkee
     # DON'T PUSH THIS BUTTON UNLESS YOU MEAN IT. :)
     def self.clear_all_turks(force = false)
       # Do NOT execute this function if we're in production mode
-      raise "You can only clear turks in the sandbox/development environment unless you pass 'true' for the force flag." if RAILS_ENV == 'production' && !force
+      raise "You can only clear turks in the sandbox/development environment unless you pass 'true' for the force flag." if Rails.env == 'production' && !force
 
       hits = RTurk::Hit.all_reviewable
 
@@ -101,6 +100,7 @@ module Turkee
 
         hits.each do |hit|
           begin
+            puts "Hit.status = #{hit.status}"
             hit.expire! if (hit.status == "Assignable" || hit.status == 'Unassignable')
 
             hit.assignments.each do |assignment|
@@ -166,7 +166,7 @@ module Turkee
     end
 
     def self.assignment_params(answers)
-      answers.map { |k, v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}" }.join('&')
+      answers.to_query
     end
 
     # Method looks at the parameter and attempts to find an ActiveRecord model
@@ -183,10 +183,10 @@ module Turkee
       nil
     end
 
-    def self.form_url(host, typ)
+    def self.form_url(host, typ, params = {})
       @app ||= ActionController::Integration::Session.new(Rails.application)
-      #@app.send("new_#{typ.to_s.underscore}_url(:host => '#{host}')")  # Not sure why app does respond when :host is passed...
-      url = (host + @app.send("new_#{typ.to_s.underscore}_path")) # Workaround for now. :(
+      url = (host + @app.send("new_#{typ.to_s.underscore}_path")) 
+      url = "#{url}?#{params.to_query}" unless params.empty?
       url
     end
 

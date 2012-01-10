@@ -57,5 +57,5 @@ end
 
 Spork.each_run do
   $LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
-  Dir["#{File.dirname(__FILE__)}/../lib/**/*.rb"].each {|f| puts "f = #{f}"; require f}
+  Dir["#{File.dirname(__FILE__)}/../lib/**/*.rb"].each {|f| require f}
 end
