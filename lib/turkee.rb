@@ -61,7 +61,7 @@ module Turkee
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
-    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, approval_rate = nil, params = {})
+    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, qualifications = {}, params = {})
 
       model    = Object::const_get(typ)
       duration = lifetime.to_i
@@ -73,7 +73,11 @@ module Turkee
         hit.reward      = reward
         hit.lifetime    = duration.days.seconds.to_i
         hit.question(f_url, :frame_height => HIT_FRAMEHEIGHT)
-        hit.qualifications.add :approval_rate, { :gt => approval_rate } unless approval_rate.nil?
+        unless qualifications.empty?
+          qualifications.each do |key, value|
+            hit.qualifications.add key, value
+          end
+        end
       end
 
       TurkeeTask.create(:sandbox             => RTurk.sandbox?,
