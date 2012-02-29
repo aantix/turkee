@@ -42,11 +42,12 @@ module Turkee
               model      = find_model(param_hash)
 
               next if model.nil?
+              puts "param_hash = #{param_hash}"
               result = model.create(param_hash[model.to_s.underscore])
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
               #  otherwise just approve it by default
-              process_result(assignment, result)
+              process_result(assignment, result, turk)
 
               TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
             end
@@ -133,27 +134,35 @@ module Turkee
     end
 
     def self.check_hit_completeness(hit, turk, models)
-      mark_completed(hit, models, turk) if hit.completed_assignments == turk.hit_num_assignments
+      puts "#### turk.completed_assignments == turk.hit_num_assignments :: #{turk.completed_assignments} == #{turk.hit_num_assignments}"
+      if turk.completed_assignments == turk.hit_num_assignments
+        hit.dispose!
+        turk.complete = true
+        turk.save
+        models.each { |model| model.hit_complete(turk) if model.respond_to?(:hit_complete) }
+      end
     end
 
-    def self.mark_completed(hit, models, turk)
-      hit.dispose!
 
-      turk.complete = true
-      turk.save
-
-      models.each { |model| model.hit_complete(turk) if model.respond_to?(:hit_complete) }
-    end
-
-    def self.process_result(assignment, result)
+    def self.process_result(assignment, result, turk)
       if result.errors.size > 0
         logger.info "Errors : #{result.inspect}"
         assignment.reject!('Failed to enter proper data.')
       elsif result.respond_to?(:approve?)
         logger.debug "Approving : #{result.inspect}"
+        increment_complete_assignments(turk)
         result.approve? ? assignment.approve!('') : assignment.reject!('Rejected criteria.')
       else
+        increment_complete_assignments(turk)
         assignment.approve!('')
+      end
+    end
+
+    def self.increment_complete_assignments(turk)
+      # Backward compatibility; completed_assignments may not exist in the table
+      if turk.respond_to?(:completed_assignments)
+        turk.completed_assignments += 1
+        turk.save
       end
     end
 
