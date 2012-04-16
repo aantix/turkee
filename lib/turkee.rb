@@ -14,6 +14,9 @@ module Turkee
   end
 
   class TurkeeTask < ActiveRecord::Base
+    attr_accessible :sandbox, :hit_title, :hit_description, :hit_reward, :hit_num_assignments, :hit_lifetime,
+                    :form_url, :hit_url, :hit_id, :task_type, :complete
+
     HIT_FRAMEHEIGHT     = 1000
 
     scope :unprocessed_hits, :conditions => ['complete = ?', false]
@@ -62,11 +65,11 @@ module Turkee
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
-    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, qualifications = {}, params = {})
+    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, qualifications = {}, params = {}, opts = {})
 
       model    = Object::const_get(typ)
       duration = lifetime.to_i
-      f_url    = form_url(host, model, params)
+      f_url    = (opts[:form_url] || form_url(host, model, params))
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
         hit.assignments = num_assignments
