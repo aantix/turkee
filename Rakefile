@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'rake'
 
-$LOAD_PATH.unshift('lib')
+$:.push File.expand_path("../lib", __FILE__)
 
 begin
   INSTALL_MESSAGE = %q{
@@ -19,9 +19,8 @@ begin
   ========================================================================
   -- Gobble, gobble.
   }
-  
-  require 'jeweler'
-  Jeweler::Tasks.new do |gem|
+
+  Gem::Specification.new do |gem|
     gem.name = "turkee"
     gem.summary = "Turkee makes dealing with Amazon's Mechnical Turk a breeze."
     gem.description = "Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk."
@@ -35,9 +34,6 @@ begin
     gem.post_install_message = INSTALL_MESSAGE
     gem.require_path = 'lib'
     gem.files = %w(MIT-LICENSE README.textile Gemfile Rakefile init.rb) + Dir.glob("{lib,spec}/**/*")
-    
+
   end
-  Jeweler::GemcutterTasks.new
-rescue LoadError
-  puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler"
 end

@@ -69,7 +69,7 @@ module Turkee
 
       model    = Object::const_get(typ)
       duration = lifetime.to_i
-      f_url    = (opts[:form_url] || form_url(host, model, params))
+      f_url    = (full_url(opts[:form_url], params) || form_url(host, model, params))
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
         hit.assignments = num_assignments
@@ -201,8 +201,13 @@ module Turkee
 
     def self.form_url(host, typ, params = {})
       @app ||= ActionController::Integration::Session.new(Rails.application)
-      url = (host + @app.send("new_#{typ.to_s.underscore}_path")) 
-      url = "#{url}?#{params.to_query}" unless params.empty?
+      url = (host + @app.send("new_#{typ.to_s.underscore}_path"))
+      full_url(url, params)
+    end
+
+    def self.full_url(u, params)
+      url = u
+      url = "#{u}?#{params.to_query}" unless params.empty?
       url
     end
 
