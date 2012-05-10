@@ -1,5 +1,7 @@
 require 'rubygems'
 require 'rake'
+require 'bundler'
+Bundler::GemHelper.install_tasks
 
 $:.push File.expand_path("../lib", __FILE__)
 
@@ -8,8 +10,11 @@ begin
   ========================================================================
   Turkee Installation Complete.
   ------------------------------------------------------------------------
+  If you're upgrading Turkee (1.1.1 and prior) or installing for the first time, run:
 
-  For instructions on gem usage, visit:
+    rails g turkee --skip
+
+  For full instructions on gem usage, visit:
     http://github.com/aantix/turkee#readme
 
   ** If you like the Turkee gem, please click the "watch" button on the
@@ -17,7 +22,6 @@ begin
     http://github.com/aantix/turkee
 
   ========================================================================
-  -- Gobble, gobble.
   }
 
   Gem::Specification.new do |gem|
