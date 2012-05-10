@@ -17,11 +17,18 @@ Mechanical Turk is now requiring that the hitId, workerId, and the turkSubmitTo 
 What does this mean for you?  Not much besides the fact that now when you construct your forms using turkee_form_for, you'll be passing in your entire params hash instead of just the assignment_id.  The code snippet below reflect this change.
 
 
-== Install
+== Install/Upgrade
 
 Add turkee to your Gemfile as a gem dependency, then do a 'bundle install':
 
     gem 'turkee'
+
+If you're upgrading Turkee (1.1.1 and prior):
+
+    rails g turkee --skip
+
+(the skip flag will ensure that you don't overwrite prior Turkee initializers and migrations.)
+
 
 To access the Turkee rake tasks, add the following to your application's Rakefile:
     require 'tasks/turkee'
@@ -118,15 +125,22 @@ As for Mechanical Turk approval, if the row is created and you haven't specified
       end
     end
 
+
+== Advanced Usage
+
+You can use the params hash to pass object IDs to your forms.  E.g. if you wanted to setup a form of questions about a given URL (let's call the model UrlSurvey), your code would look something like :
+
+URL.all do |url|
+  Turkee::TurkeeTask.create_hit(host, hit_title, hit_description, UrlSurvey, num_assignments, reward, lifetime, qualifications = {}, params = {:url_id => url.id}, opts = {})
+end
+
+Then when displaying your form, you can find the URL object via the params[:url_id] value.
+
 == Gotchas
 
-1) There's a maximum length of 49 characters for an form input name, anything beyond that and you'll receive the message "Your request was not completed successfully." after submitting your form.  So if you have a long class name or plan to use nested form attributes (which will generate long input names), you will have to shorten their class name. Sorry.  
-
-E.g. I had a Transcription class with a has_many relation called TranscriptionSegments. I submitted a nested form.  The text input  transcription[transcription_segments_attributes][0][candidate_text] caused an error upon submission.
-
-2) The application that hosts your external forms preferably should have an https interface (you're going to have to buy an SSL certificate).  If the forms are hosted on an unsecured host (http), because Mechanical Turk defaults to https, you're going to receive the ugly popup from IE regarding "mixed content" (http://msdn.microsoft.com/en-us/library/ee264315%28v=vs.85%29.aspx).
+1) The application that hosts your external forms preferably should have an https interface (you're going to have to buy an SSL certificate).  If the forms are hosted on an unsecured host (http), because Mechanical Turk defaults to https, you're going to receive the ugly popup from IE regarding "mixed content" (http://msdn.microsoft.com/en-us/library/ee264315%28v=vs.85%29.aspx).
 
 
 == Copyright
 
-Copyright (c) 2010 - 2011 Jim Jones. See LICENSE for details.
+Copyright (c) 2010 - 2012 Jim Jones. See LICENSE for details.

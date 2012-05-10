@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{turkee}
-  s.version = "1.1.1"
+  s.version = "1.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Jim Jones}]
-  s.date = %q{2011-06-03}
+  s.date = %q{2012-05-09}
   s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [
@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
     "Rakefile",
     "lib/generators/turkee/templates/turkee.rb",
     "lib/generators/turkee/templates/turkee_imported_assignments.rb.erb",
+    "lib/generators/turkee/templates/add_completed_tasks.rb.erb",
     "lib/generators/turkee/templates/turkee_migration.rb.erb",
     "lib/generators/turkee/turkee_generator.rb",
     "lib/tasks/turkee.rb",
@@ -34,6 +35,14 @@ Gem::Specification.new do |s|
   ========================================================================
   Turkee Installation Complete.
   ------------------------------------------------------------------------
+
+  If you're upgrading, be sure to execute the following to receive the
+  latest migration changes.
+    rails g turkee --skip
+
+  (the skip flag will ensure that you don't overwrite prior
+  Turkee initializers and migrations)
+
 
   For instructions on gem usage, visit:
     http://github.com/aantix/turkee#readme
@@ -53,17 +62,8 @@ Gem::Specification.new do |s|
   s.add_dependency(%q<rails>, [">= 3.1.1"])
   s.add_dependency(%q<rturk>, [">= 2.3.0"])
 
-  s.add_development_dependency "guard-rspec"
-  s.add_development_dependency "spork", "> 0.9.0.rc"
-  s.add_development_dependency 'growl', '>= 1.0.3'
-  s.add_development_dependency "guard-spork"
   s.add_development_dependency "mocha"
   s.add_development_dependency "sqlite3"
-
-  # Since Growl is Mac OS X the `if` test only installs those gems for the development profile on OS X
-  if RUBY_PLATFORM.downcase.include?("darwin")
-    s.add_development_dependency 'rb-fsevent', ">= 0.4.3.1"
-  end
 
   # RSpec has to be in both test and development so that rake tasks and generators
   # are available without having to explicitly switch the environment to 'test'
