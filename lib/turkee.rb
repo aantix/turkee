@@ -99,7 +99,7 @@ module Turkee
       # Do NOT execute this function if we're in production mode
       raise "You can only clear turks in the sandbox/development environment unless you pass 'true' for the force flag." if Rails.env == 'production' && !force
 
-      hits = RTurk::Hit.all_reviewable
+      hits = RTurk::Hit.all
 
       logger.info "#{hits.size} reviewable hits. \n"
 
@@ -108,8 +108,7 @@ module Turkee
 
         hits.each do |hit|
           begin
-            puts "Hit.status = #{hit.status}"
-            hit.expire! if (hit.status == "Assignable" || hit.status == 'Unassignable')
+            hit.expire!
 
             hit.assignments.each do |assignment|
 
