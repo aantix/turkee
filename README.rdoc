@@ -74,7 +74,7 @@ Inside the config/initializers directory, you'll see the file turkee.rb.  Edit t
 
 3) Change your forms to use the form helper.
 
-    <% turkee_form_for(@survey, params) do |f| %>
+    <%= turkee_form_for(@survey, params) do |f| %>
         <p><%= f.text_area :value, :disabled => @disabled %></p>
         <p><%= f.submit 'Create', :disabled => @disabled %></p>
     <% end %>
