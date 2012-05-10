@@ -127,14 +127,25 @@ As for Mechanical Turk approval, if the row is created and you haven't specified
 
 == Advanced Usage
 
-You can use the params hash to pass object IDs to your forms.  E.g. if you wanted to setup a form of questions about a given URL (let's call the model UrlSurvey), your code would look something like :
+1) You can use the params hash to pass object IDs to your forms.  E.g. if you wanted to setup a form of questions about a given URL (let's call the model UrlSurvey), your code would look something like :
 
     URL.all do |url|
         Turkee::TurkeeTask.create_hit(host, hit_title, hit_description, UrlSurvey, num_assignments, reward,
-        lifetime, {}, {:url_id => url.id}, {})
+            lifetime, {}, {:url_id => url.id}, {})
     end
 
 Then when displaying your form, you can find the URL object via the params[:url_id] value.
+
+
+2) Turkee assumes that the form url will be the new action for the class passed to create_hit.  If you have a more complex form url which would be the case for nested resources, you can use the :form_url
+option to designate a form url different from the default.
+
+
+    form_url Rails.application.routes.url_helpers.send("new_user_survey_path",@my_survey)
+
+    Turkee::TurkeeTask.create_hit(host, hit_title, hit_description, Survey, num_assignments, reward,
+        lifetime, {}, {}, {:form_url => form_url})
+
 
 == Gotchas
 
