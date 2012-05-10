@@ -141,7 +141,7 @@ Then when displaying your form, you can find the URL object via the params[:url_
 option to designate a form url different from the default.
 
 
-    form_url Rails.application.routes.url_helpers.send("new_user_survey_path",@my_survey)
+    form_url = Rails.application.routes.url_helpers.send("new_user_survey_path",@my_survey)
 
     Turkee::TurkeeTask.create_hit(host, hit_title, hit_description, Survey, num_assignments, reward,
         lifetime, {}, {}, {:form_url => form_url})
