@@ -103,7 +103,7 @@ When a Turk worker views your HIT, the HIT will display your form within an iFra
 5) Allow some time for the Mechanical Turk workers ("Turkers") to respond to your HIT.
 
 6) Run the rake task that retrieves the values from Mechanical Turk and stores the user entered values into your model.
-    rake turkee::get_all_results
+    rake turkee:get_all_results
 
 Rerun this task periodically to retrieve newly entered form values.  You can setup this task as a cronjob to automate this.
 
