@@ -2,10 +2,10 @@ require 'rake'
 require 'turkee'
 
 namespace :turkee do
-  desc "Post your form to Mechanical Turk (HIT). Task takes the application's host URL, HIT title, HIT description, model name, number of responses, reward for each response, and number of days the HIT should be valid."
-  task :post_hit, [:host, :title, :description, :model, :num_assignments, :reward, :lifetime] => :environment do |t, args|
+  desc "Post your form to Mechanical Turk (HIT). Task takes the application's host URL, HIT title, HIT description, model name, number of responses, reward for each response, number of days the HIT should be valid, and number of hours a worker has to complete the HIT."
+  task :post_hit, [:host, :title, :description, :model, :num_assignments, :reward, :lifetime, :duration] => :environment do |t, args|
     hit = Turkee::TurkeeTask.create_hit(args[:host],args[:title], args[:description], args[:model],
-                                        args[:num_assignments], args[:reward], args[:lifetime])
+                                        args[:num_assignments], args[:reward], args[:lifetime], args[:duration])
     puts "Hit created ( #{hit.hit_url} )."
   end
 

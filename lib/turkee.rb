@@ -14,7 +14,7 @@ module Turkee
   end
 
   class TurkeeTask < ActiveRecord::Base
-    attr_accessible :sandbox, :hit_title, :hit_description, :hit_reward, :hit_num_assignments, :hit_lifetime,
+    attr_accessible :sandbox, :hit_title, :hit_description, :hit_reward, :hit_num_assignments, :hit_lifetime, :hit_duration,
                     :form_url, :hit_url, :hit_id, :task_type, :complete
 
     HIT_FRAMEHEIGHT     = 1000
@@ -35,7 +35,7 @@ module Turkee
           turks.each do |turk|
             hit   = RTurk::Hit.new(turk.hit_id)
 
-            models = []
+            models = Set.new
             hit.assignments.each do |assignment|
               next unless submitted?(assignment.status)
               next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
@@ -45,14 +45,16 @@ module Turkee
               model      = find_model(param_hash)
 
               next if model.nil?
-              puts "param_hash = #{param_hash}"
+              models << model
+              
+              logger.debug "param_hash = #{param_hash}"
               result = model.create(param_hash[model.to_s.underscore])
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
               #  otherwise just approve it by default
               process_result(assignment, result, turk)
 
-              TurkeeImportedAssignment.create(:assignment_id => assignment.id) rescue nil
+              TurkeeImportedAssignment.create(:assignment_id => assignment.id, :turkee_task_id => turk.id, :worker_id => assignment.worker_id, :result_id => result.id) rescue nil
             end
 
             check_hit_completeness(hit, turk, models)
@@ -65,17 +67,17 @@ module Turkee
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
-    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, qualifications = {}, params = {}, opts = {})
+    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, duration, qualifications = {}, params = {}, opts = {})
 
       model    = Object::const_get(typ)
-      duration = lifetime.to_i
-      f_url    = (full_url(opts[:form_url], params) || form_url(host, model, params))
+      f_url    = build_url(host, model, params, opts)
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
         hit.assignments = num_assignments
         hit.description = hit_description
         hit.reward      = reward
-        hit.lifetime    = duration.days.seconds.to_i
+        hit.lifetime    = lifetime.to_i.days.seconds.to_i
+        hit.duration    = duration.to_i.hours.to_i
         hit.question(f_url, :frame_height => HIT_FRAMEHEIGHT)
         unless qualifications.empty?
           qualifications.each do |key, value|
@@ -87,9 +89,10 @@ module Turkee
       TurkeeTask.create(:sandbox             => RTurk.sandbox?,
                         :hit_title           => hit_title,    :hit_description     => hit_description,
                         :hit_reward          => reward.to_f,  :hit_num_assignments => num_assignments.to_i,
-                        :hit_lifetime        => lifetime,     :form_url            => f_url,
-                        :hit_url             => h.url,        :hit_id              => h.id,
-                        :task_type           => typ,          :complete            => false)
+                        :hit_lifetime        => lifetime,     :hit_duration => duration,
+                        :form_url            => f_url,        :hit_url             => h.url,
+                        :hit_id              => h.id,         :task_type           => typ,
+                        :complete            => false)
 
     end
 
@@ -140,7 +143,7 @@ module Turkee
     end
 
     def self.check_hit_completeness(hit, turk, models)
-      puts "#### turk.completed_assignments == turk.hit_num_assignments :: #{turk.completed_assignments} == #{turk.hit_num_assignments}"
+      logger.debug "#### turk.completed_assignments == turk.hit_num_assignments :: #{turk.completed_assignments} == #{turk.hit_num_assignments}"
       if turk.completed_assignments == turk.hit_num_assignments
         hit.dispose!
         turk.complete = true
@@ -197,13 +200,24 @@ module Turkee
       end
       nil
     end
+    
+    # Returns custom URL if opts[:form_url] is specified.  Otherwise, builds the default url from the model's :new route    
+    def self.build_url(host, model, params, opts)
+      if opts[:form_url]
+        full_url(opts[:form_url], params)
+      else 
+        form_url(host, model, params)
+      end
+    end
 
+    # Returns the default url of the model's :new route
     def self.form_url(host, typ, params = {})
       @app ||= ActionController::Integration::Session.new(Rails.application)
       url = (host + @app.send("new_#{typ.to_s.underscore}_path"))
       full_url(url, params)
     end
 
+    # Appends params to the url as a query string
     def self.full_url(u, params)
       url = u
       url = "#{u}?#{params.to_query}" unless params.empty?

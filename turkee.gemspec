@@ -23,6 +23,8 @@ Gem::Specification.new do |s|
     "lib/generators/turkee/templates/turkee_imported_assignments.rb.erb",
     "lib/generators/turkee/templates/add_completed_tasks.rb.erb",
     "lib/generators/turkee/templates/turkee_migration.rb.erb",
+    "lib/generators/turkee/templates/add_imported_assignment_details.rb.erb",
+    "lib/generators/turkee/templates/add_hit_duration.rb.erb",
     "lib/generators/turkee/turkee_generator.rb",
     "lib/tasks/turkee.rb",
     "lib/turkee.rb",
@@ -60,7 +62,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency(%q<lockfile>)
   s.add_dependency(%q<rails>, [">= 3.1.1"])
-  s.add_dependency(%q<rturk>, [">= 2.3.0"])
+  s.add_dependency(%q<rturk>, [">= 2.4.0"])
 
   s.add_development_dependency "mocha"
   s.add_development_dependency "sqlite3"
