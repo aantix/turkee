@@ -125,8 +125,8 @@ As for Mechanical Turk approval, if the row is created and you haven't specified
       end
     end
 
-8) When all specified assignments for a HIT have been completed, Turkee will attempt to call the optional hit_complete class method for the model.  This can be used for any cleanup logic.
-	class Survey < ActiveRecord::Base
+8) When all specified assignments for a HIT have been completed, Turkee will attempt to call the optional hit_complete class method for the model.  This can be used for any cleanup logic.  E.g. :
+    class Survey < ActiveRecord::Base
 	  def self.hit_complete(turkee_task)
 	    #do something
 	  end
