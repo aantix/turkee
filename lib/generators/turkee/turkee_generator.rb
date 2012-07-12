@@ -25,6 +25,14 @@ class TurkeeGenerator < Rails::Generators::Base
     sleep 1
 
     migration_template "add_completed_tasks.rb.erb", "db/migrate/add_completed_tasks.rb"
+    
+    sleep 1
+
+    migration_template "add_imported_assignment_details.rb.erb", "db/migrate/add_imported_assignment_details.rb"
+
+    sleep 1
+
+    migration_template "add_hit_duration.rb.erb", "db/migrate/add_hit_duration.rb"
 
   end
 
