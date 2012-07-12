@@ -89,9 +89,8 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
     # Number of assignments for HIT
     # The reward for a successful completion
     # The lifetime of the HIT in days (e.g. 5 days)
-    # The duration in hours the HIT is available to a worker (e.g. 1 hour)
 
-    rake turkee:post_hit[<Host>, <Title>, <Description>, <Model>, <Number of Assignments>, <Reward>, <Lifetime>, <Duration>]
+    rake turkee:post_hit[<Host>, <Title>, <Description>, <Model>, <Number of Assignments>, <Reward>, <Lifetime>]
 
     e.g. :
     rake turkee:post_hit["https://www.yourapp.com","Please complete our survey","Tell us your favorite color.","Survey",100,0.05,5,1]
