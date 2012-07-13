@@ -22,6 +22,7 @@ ActiveRecord::Schema.define(:version => 1) do
     t.decimal  "hit_reward", :precision => 10, :scale => 2
     t.integer  "hit_num_assignments"
     t.integer  "hit_lifetime"
+    t.integer  "hit_duration"
     t.string   "form_url"
     t.boolean  "complete"
   end

@@ -93,7 +93,7 @@ Using the turkee_form_for helper will post the form to the Mechanical Turk sandb
     rake turkee:post_hit[<Host>, <Title>, <Description>, <Model>, <Number of Assignments>, <Reward>, <Lifetime>]
 
     e.g. :
-    rake turkee:post_hit["https://www.yourapp.com","Please complete our survey","Tell us your favorite color.","Survey",100,0.05,2]
+    rake turkee:post_hit["https://www.yourapp.com","Please complete our survey","Tell us your favorite color.","Survey",100,0.05,5,1]
     ** Do not put spaces before or after commas for the rake task parameters
 
 This will insert a row for the requested HIT into the turkee_tasks table.  The turkee_tasks entry stores (along with the other properties) the HIT URL (e.g. http://workersandbox.mturk.com/mturk/preview?groupId=1HGHJJGHQSJB7WMWJ33YS8WM169XNIL ) and HIT ID (e.g. 1J1EXO8SUQ3URTTUYGHJ7EKUT11 ).  These values are returned from Mechanical Turk when the HIT request is posted.
@@ -124,6 +124,12 @@ As for Mechanical Turk approval, if the row is created and you haven't specified
       end
     end
 
+8) When all specified assignments for a HIT have been completed, Turkee will attempt to call the optional hit_complete class method for the model.  This can be used for any cleanup logic.  E.g. :
+    class Survey < ActiveRecord::Base
+      def self.hit_complete(turkee_task)
+        #do something
+      end
+    end
 
 == Advanced Usage
 
@@ -131,7 +137,7 @@ As for Mechanical Turk approval, if the row is created and you haven't specified
 
     URL.all do |url|
         Turkee::TurkeeTask.create_hit(host, hit_title, hit_description, UrlSurvey, num_assignments, reward,
-            lifetime, {}, {:url_id => url.id}, {})
+            lifetime, duration, {}, {:url_id => url.id}, {})
     end
 
 Then when displaying your form, you can find the URL object via the params[:url_id] value.
@@ -144,7 +150,7 @@ option to designate a form url different from the default.
     form_url = Rails.application.routes.url_helpers.send("new_user_survey_path",@my_survey)
 
     Turkee::TurkeeTask.create_hit(host, hit_title, hit_description, :Survey, num_assignments, reward,
-        lifetime, {}, {}, {:form_url => form_url})
+        lifetime, duration, {}, {}, {:form_url => form_url})
 
 
 == Gotchas
