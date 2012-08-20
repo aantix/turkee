@@ -19,7 +19,7 @@ module Turkee
 
     HIT_FRAMEHEIGHT     = 1000
 
-    scope :unprocessed_hits, :conditions => ['complete = ? AND sanbox = ?', false, RTurk.sandbox?]
+    scope :unprocessed_hits, :conditions => ['complete = ? AND sandbox = ?', false, RTurk.sandbox?]
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
