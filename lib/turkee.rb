@@ -11,6 +11,7 @@ module Turkee
 
   # Model simply tracks what assignments have been imported
   class TurkeeImportedAssignment < ActiveRecord::Base
+    attr_accessible :assignment_id, :turkee_task_id, :worker_id, :result_id
   end
 
   class TurkeeTask < ActiveRecord::Base
