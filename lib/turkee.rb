@@ -20,7 +20,7 @@ module Turkee
 
     HIT_FRAMEHEIGHT     = 1000
 
-    scope :unprocessed_hits, :conditions => ['complete = ? AND sandbox = ?', false, RTurk.sandbox?]
+    scope :unprocessed_hits, lambda{ where('complete = ? AND sandbox = ?', false, RTurk.sandbox?) }
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
@@ -55,7 +55,7 @@ module Turkee
               #  otherwise just approve it by default
               process_result(assignment, result, turk)
 
-              TurkeeImportedAssignment.create(:assignment_id => assignment.id, :turkee_task_id => turk.id, :worker_id => assignment.worker_id, :result_id => result.id) rescue nil
+              TurkeeImportedAssignment.create!(:assignment_id => assignment.id, :turkee_task_id => turk.id, :worker_id => assignment.worker_id, :result_id => result.id)
             end
 
             check_hit_completeness(hit, turk, models)
