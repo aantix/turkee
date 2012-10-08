@@ -12,6 +12,14 @@ module Turkee
   # Model simply tracks what assignments have been imported
   class TurkeeImportedAssignment < ActiveRecord::Base
     attr_accessible :assignment_id, :turkee_task_id, :worker_id, :result_id
+
+    def self.record_imported_assignment(assignment, result, turk)
+      TurkeeImportedAssignment.create!(:assignment_id  => assignment.id,
+                                       :turkee_task_id => turk.id,
+                                       :worker_id      => assignment.worker_id,
+                                       :result_id      => result.id)
+    end
+
   end
 
   class TurkeeTask < ActiveRecord::Base
@@ -36,35 +44,36 @@ module Turkee
           turks.each do |turk|
             hit   = RTurk::Hit.new(turk.hit_id)
 
-            models = Set.new
+            callback_models = Set.new
             hit.assignments.each do |assignment|
               next unless submitted?(assignment.status)
-              next unless TurkeeImportedAssignment.find_by_assignment_id(assignment.id).nil?
+              next if assignment_exists?(assignment)
 
-              params     = assignment_params(assignment.answers)
-              param_hash = Rack::Utils.parse_nested_query(params)
-              model      = find_model(param_hash)
-
+              model, param_hash = map_imported_values(assignment)
               next if model.nil?
-              models << model
+
+              callback_models << model
               
-              logger.debug "param_hash = #{param_hash}"
-              result = model.create(param_hash[model.to_s.underscore])
+              result = save_imported_values(model, param_hash)
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
               #  otherwise just approve it by default
-              process_result(assignment, result, turk)
+              turk.process_result(assignment, result)
 
-              TurkeeImportedAssignment.create!(:assignment_id => assignment.id, :turkee_task_id => turk.id, :worker_id => assignment.worker_id, :result_id => result.id)
+              TurkeeImportedAssignment.record_imported_assignment(assignment, result, turk)
             end
 
-            check_hit_completeness(hit, turk, models)
+            turk.check_hit_completeness(hit, callback_models)
           end
         end
       rescue Lockfile::MaxTriesLockError => e
         logger.info "TurkTask.process_hits is already running or the lockfile /tmp/turk_processor.lock exists from an improperly shutdown previous process. Exiting method call."
       end
 
+    end
+
+    def self.save_imported_values(model, param_hash)
+      model.create(param_hash[model.to_s.underscore])
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
@@ -136,43 +145,65 @@ module Turkee
 
     end
 
+    def check_hit_completeness(hit, models)
+      logger.debug "#### completed_assignments == hit_num_assignments :: #{self.completed_assignments} == #{self.hit_num_assignments}"
+      if completed_assignments? || expired?
+        hit.dispose!
+
+        self.complete = true
+        save!
+
+        initiate_hit_complete_callback(models)
+      end
+    end
+
+    def initiate_hit_complete_callback(models)
+      models.each { |model| model.hit_complete(turk) if model.respond_to?(:hit_complete) }
+    end
+
+    def process_result(assignment, result)
+      if result.errors.size > 0
+        logger.info "Errors : #{result.inspect}"
+        assignment.reject!('Failed to enter proper data.')
+      elsif result.respond_to?(:approve?)
+        logger.debug "Approving : #{result.inspect}"
+        self.increment_complete_assignments
+        result.approve? ? assignment.approve!('') : assignment.reject!('Rejected criteria.')
+      else
+        self.increment_complete_assignments
+        assignment.approve!('')
+      end
+    end
+
+    def increment_complete_assignments
+      raise "Missing :completed_assignments attribute. Please upgrade Turkee to the most recent version." unless respond_to?(:completed_assignments)
+
+      self.completed_assignments += 1
+      save
+    end
+
     private
 
     def logger
       @logger ||= Logger.new($stderr)
     end
 
-    def self.check_hit_completeness(hit, turk, models)
-      logger.debug "#### turk.completed_assignments == turk.hit_num_assignments :: #{turk.completed_assignments} == #{turk.hit_num_assignments}"
-      if turk.completed_assignments == turk.hit_num_assignments
-        hit.dispose!
-        turk.complete = true
-        turk.save
-        models.each { |model| model.hit_complete(turk) if model.respond_to?(:hit_complete) }
-      end
+    def self.map_imported_values(assignment)
+      params     = assignment_params(assignment.answers)
+      param_hash = Rack::Utils.parse_nested_query(params)
+      return find_model(param_hash), param_hash
     end
 
-
-    def self.process_result(assignment, result, turk)
-      if result.errors.size > 0
-        logger.info "Errors : #{result.inspect}"
-        assignment.reject!('Failed to enter proper data.')
-      elsif result.respond_to?(:approve?)
-        logger.debug "Approving : #{result.inspect}"
-        increment_complete_assignments(turk)
-        result.approve? ? assignment.approve!('') : assignment.reject!('Rejected criteria.')
-      else
-        increment_complete_assignments(turk)
-        assignment.approve!('')
-      end
+    def self.assignment_exists?(assignment)
+      TurkeeImportedAssignment.find_by_assignment_id(assignment.id).present?
     end
 
-    def self.increment_complete_assignments(turk)
-      # Backward compatibility; completed_assignments may not exist in the table
-      if turk.respond_to?(:completed_assignments)
-        turk.completed_assignments += 1
-        turk.save
-      end
+    def completed_assignments?
+      completed_assignments == hit_num_assignments
+    end
+
+    def expired?
+      Time.now >= (created_at + hit_lifetime.days)
     end
 
     def self.task_items(turkee_task)

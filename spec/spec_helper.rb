@@ -4,7 +4,6 @@ require "bundler/setup"
 require 'factory_girl'
 require 'rspec'
 require 'spork'
-require 'growl'
 require 'rails'
 require 'rturk'
 require 'lockfile'
@@ -22,9 +21,13 @@ ActiveRecord::Schema.define(:version => 1) do
     t.decimal  "hit_reward", :precision => 10, :scale => 2
     t.integer  "hit_num_assignments"
     t.integer  "hit_lifetime"
-    t.integer  "hit_duration"
     t.string   "form_url"
+    t.integer  "completed_assignments", :default => 0
     t.boolean  "complete"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+    t.integer  "turkee_flow_id"
+    t.integer  "hit_duration"
   end
 end
 

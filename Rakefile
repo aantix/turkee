@@ -5,6 +5,10 @@ Bundler::GemHelper.install_tasks
 
 $:.push File.expand_path("../lib", __FILE__)
 
+task :default do
+  sh "rspec spec/"
+end
+
 begin
   INSTALL_MESSAGE = %q{
   ========================================================================
