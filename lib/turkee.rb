@@ -63,7 +63,7 @@ module Turkee
               TurkeeImportedAssignment.record_imported_assignment(assignment, result, turk)
             end
 
-            turk.check_hit_completeness(hit, callback_models)
+            turk.set_expired?(callback_models) if !turk.set_complete?(hit, callback_models)
           end
         end
       rescue Lockfile::MaxTriesLockError => e
@@ -145,20 +145,30 @@ module Turkee
 
     end
 
-    def check_hit_completeness(hit, models)
-      logger.debug "#### completed_assignments == hit_num_assignments :: #{self.completed_assignments} == #{self.hit_num_assignments}"
-      if completed_assignments? || expired?
+    def set_complete?(hit, models)
+      if completed_assignments?
         hit.dispose!
 
         self.complete = true
         save!
 
-        initiate_hit_complete_callback(models)
+        initiate_callback(:hit_complete, models)
+        return true
+      end
+
+      false
+    end
+
+    def set_expired?(models)
+      if expired?
+        self.expired = true
+        save!
+        initiate_callback(:hit_expired, models)
       end
     end
 
-    def initiate_hit_complete_callback(models)
-      models.each { |model| model.hit_complete(turk) if model.respond_to?(:hit_complete) }
+    def initiate_callback(method, models)
+      models.each { |model| model.send(method, self) if model.respond_to?(method) }
     end
 
     def process_result(assignment, result)

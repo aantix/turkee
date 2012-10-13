@@ -34,6 +34,10 @@ class TurkeeGenerator < Rails::Generators::Base
 
     migration_template "add_hit_duration.rb.erb", "db/migrate/add_hit_duration.rb"
 
+    sleep 1
+
+    migration_template "add_expired.rb.erb", "db/migrate/add_expired.rb"
+
   end
 
   def create_initializer

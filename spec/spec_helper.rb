@@ -24,10 +24,15 @@ ActiveRecord::Schema.define(:version => 1) do
     t.string   "form_url"
     t.integer  "completed_assignments", :default => 0
     t.boolean  "complete"
+    t.boolean  "expired"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
     t.integer  "turkee_flow_id"
     t.integer  "hit_duration"
+  end
+
+  create_table :surveys do |t|
+    t.string :answer
   end
 end
 

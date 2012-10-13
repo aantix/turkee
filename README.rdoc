@@ -5,18 +5,6 @@ Seamlessly convert your Rails forms for use on Mechanical Turk.  Then, easily im
 External forms are created using a simple form helper.  HITs are created by issuing a rake command.  Retrieving submitted response data and importing that data into your model(s) requires just one more rake command.
 
 
-== Rails 2
-
-I'm no longer supporting Rails 2.x.  If you have Rails 2 changes, message me and we can look to maintaing a Rails 2.x branch.
-
-
-== Mechanical Turk API Changes
-
-Mechanical Turk is now requiring that the hitId, workerId, and the turkSubmitTo parameters be passed in along with the assignmentId and form parameters.
-
-What does this mean for you?  Not much besides the fact that now when you construct your forms using turkee_form_for, you'll be passing in your entire params hash instead of just the assignment_id.  The code snippet below reflect this change.
-
-
 == Install/Upgrade
 
 Add turkee to your Gemfile as a gem dependency, then do a 'bundle install':
@@ -130,6 +118,14 @@ As for Mechanical Turk approval, if the row is created and you haven't specified
         #do something
       end
     end
+
+9) If all of specified assignments for a HIT have not been completed by the end of the HITs lifetime, Turkee will attempt to call the optional hit_expired class method for the model.  This can be used for any cleanup logic.  E.g. :
+    class Survey < ActiveRecord::Base
+      def self.hit_expired(turkee_task)
+        #do something
+      end
+    end
+
 
 == Advanced Usage
 
