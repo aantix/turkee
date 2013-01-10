@@ -1,10 +1,10 @@
 Gem::Specification.new do |s|
   s.name = %q{turkee}
-  s.version = "1.2.1"
+  s.version = "1.2.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Jim Jones}]
-  s.date = %q{2012-05-09}
+  s.date = %q{2013-01-09}
   s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [

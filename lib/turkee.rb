@@ -78,7 +78,7 @@ module Turkee
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
     def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, duration = nil, qualifications = {}, params = {}, opts = {})
-      model    = Object::const_get(typ)
+      model    = typ.to_s.constantize
       f_url    = build_url(host, model, params, opts)
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
@@ -121,19 +121,13 @@ module Turkee
         hits.each do |hit|
           begin
             hit.expire!
-
             hit.assignments.each do |assignment|
-
               logger.info "Assignment status : #{assignment.status}"
-
               assignment.approve!('__clear_all_turks__approved__') if assignment.status == 'Submitted'
             end
 
             turkee_task = TurkeeTask.find_by_hit_id(hit.id)
-            if turkee_task
-              turkee_task.complete = true
-              turkee_task.save
-            end
+            turkee_task.complete_task
 
             hit.dispose!
           rescue Exception => e
@@ -145,13 +139,15 @@ module Turkee
 
     end
 
+    def complete_task
+      self.complete = true
+      save!
+    end
+
     def set_complete?(hit, models)
       if completed_assignments?
         hit.dispose!
-
-        self.complete = true
-        save!
-
+        complete_task
         initiate_callback(:hit_complete, models)
         return true
       end
@@ -235,7 +231,7 @@ module Turkee
     def self.find_model(param_hash)
       param_hash.each do |k, v|
         if v.is_a?(Hash)
-          model = Object::const_get(k.to_s.camelize) rescue next
+          model = k.to_s.camelize.constantize rescue next
           return model if model.descends_from_active_record? rescue next
         end
       end
