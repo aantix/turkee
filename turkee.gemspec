@@ -24,9 +24,14 @@ Gem::Specification.new do |s|
     "lib/generators/turkee/turkee_generator.rb",
     "lib/tasks/turkee.rb",
     "lib/turkee.rb",
+    "lib/models/turkee_imported_assignment.rb",
+    "lib/models/turkee_study.rb",
+    "lib/models/turkee_task.rb",
+    "lib/helpers/turkee_forms_helper.rb",
+    "lib/turkee.rb",
     "spec/spec.opts",
     "spec/spec_helper.rb",
-    "spec/turkee_spec.rb"
+    "spec/models/turkee_task_spec.rb"
   ]
   s.homepage = %q{http://github.com/aantix/turkee}
   s.post_install_message = %q{

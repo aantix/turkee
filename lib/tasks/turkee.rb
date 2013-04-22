@@ -14,4 +14,12 @@ namespace :turkee do
     Turkee::TurkeeTask.process_hits
   end
 
+  desc "Create a usability study. Task takes the application's full url, HIT title, HIT description, model name, number of responses, reward for each response, number of days the HIT should be valid, and number of hours a worker has to complete the HIT."
+  task :create_study, [:url, :title, :description, :num_assignments, :reward, :lifetime] => :environment do |t, args|
+    hit = Turkee::TurkeeTask.create_hit(args[:url], args[:title], args[:description], "Turkee::TurkeeStudy",
+                                        args[:num_assignments], args[:reward], args[:lifetime], nil, {}, {}, {:form_url => args[:url]})
+    puts "Study created ( #{hit.hit_url} )."
+  end
+
+
 end
