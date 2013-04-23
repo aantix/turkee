@@ -72,6 +72,6 @@ Gem::Specification.new do |s|
   # RSpec has to be in both test and development so that rake tasks and generators
   # are available without having to explicitly switch the environment to 'test'
   s.add_development_dependency 'factory_girl', '>= 1.3.2'
-  s.add_development_dependency 'rspec', '>= 2.5.0'
+  s.add_development_dependency "rspec-rails", "~> 2.6"
 end
 

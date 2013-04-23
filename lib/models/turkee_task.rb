@@ -35,7 +35,7 @@ module Turkee
               next unless submitted?(assignment.status)
               next if assignment_exists?(assignment)
 
-              model, param_hash = map_imported_values(assignment)
+              model, param_hash = map_imported_values(assignment, turk.task_type)
               next if model.nil?
 
               callback_models << model
@@ -59,7 +59,9 @@ module Turkee
     end
 
     def self.save_imported_values(model, param_hash)
-      model.create(param_hash[model.to_s.underscore])
+      key = model.to_s.underscore.gsub('/','_') # Namespaced model will come across as turkee/turkee_study,
+                                                #  we must translate to turkee_turkee_study"
+      model.create(param_hash[key])
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
@@ -180,10 +182,14 @@ module Turkee
       @logger ||= Logger.new($stderr)
     end
 
-    def self.map_imported_values(assignment)
-      params = assignment_params(assignment.answers)
+    def self.map_imported_values(assignment, default_type)
+      params     = assignment_params(assignment.answers)
       param_hash = Rack::Utils.parse_nested_query(params)
-      return find_model(param_hash), param_hash
+
+      model      = find_model(param_hash)
+      model      = default_type.constantize if model.nil?
+
+      return model, param_hash
     end
 
     def self.assignment_exists?(assignment)

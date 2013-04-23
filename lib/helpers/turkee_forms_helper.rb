@@ -8,10 +8,6 @@ module Turkee
 
       buffer = ''
       form_for record, options do |f|
-        [:assignmentId, :workerId, :hitId].each do |k|
-          v = params[:k] || cookies[:k]
-          buffer << hidden_field_tag(k, v)
-        end
         params.each do |k,v|
           unless ['action','controller'].include?(k) || !v.is_a?(String)
             buffer << hidden_field_tag(k, v)
@@ -36,9 +32,11 @@ module Turkee
           content << task.hit_description.html_safe
           content << '<br/>'.html_safe
           content << turkee_form_for(study, params) do |f|
-            buffer = f.text_area(:feedback, :rows => 3, :disabled => disabled)
+            buffer =  f.text_area(:feedback, :rows => 3, :disabled => disabled)
+            buffer << f.hidden_field(:turkee_task_id, :value => task.id)
             buffer << '<br/>'.html_safe
             buffer << f.submit('Submit', :disabled => disabled)
+            buffer
           end.html_safe
           content
         end

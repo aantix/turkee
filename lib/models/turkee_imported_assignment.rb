@@ -1,3 +1,5 @@
+require 'active_record'
+
 module Turkee
   class TurkeeImportedAssignment < ActiveRecord::Base
     attr_accessible :assignment_id, :turkee_task_id, :worker_id, :result_id
