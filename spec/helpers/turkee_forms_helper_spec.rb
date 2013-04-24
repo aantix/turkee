@@ -23,7 +23,22 @@ describe Turkee::TurkeeFormHelper, :type => :helper do
       helper.stub(:params).and_return {}
       study_form = turkee_study
       study_form.should =~ /Test Desc/
+      study_form.should =~ /feedback/
       study_form.should match /workersandbox.mturk.com/
+    end
+
+    it "saves the assignmentId to a cookie for later retrieval" do
+      helper.stub(:params).and_return({'assignmentId' => '123456'})
+
+      helper.turkee_study
+
+      helper.cookies['assignmentId'].should == '123456'
+
+      # Subsequent requests should still return form fields for assignmentId
+      helper.stub(:params).and_return({})
+      study_form = helper.turkee_study
+
+      study_form.should =~ /123456/
     end
   end
 end

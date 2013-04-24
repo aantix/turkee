@@ -3,7 +3,7 @@ class CreateTurkeeStudy < ActiveRecord::Migration
     def self.up
         create_table "turkee_studies" do |t|
             t.integer "turkee_task_id"
-            t.string "feedback"
+            t.text "feedback"
             t.timestamps
         end
 

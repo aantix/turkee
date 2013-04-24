@@ -65,7 +65,8 @@ module Turkee
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
-    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime, duration = nil, qualifications = {}, params = {}, opts = {})
+    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime,
+                        duration = nil, qualifications = {}, params = {}, opts = {})
       model = typ.to_s.constantize
       f_url = build_url(host, model, params, opts)
 

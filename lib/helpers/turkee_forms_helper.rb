@@ -11,8 +11,14 @@ module Turkee
         params.each do |k,v|
           unless ['action','controller'].include?(k) || !v.is_a?(String)
             buffer << hidden_field_tag(k, v)
+            cookies[k] = v
           end
         end
+
+        ['assignmentId', 'workerId', 'hitId'].each do |k|
+          buffer << hidden_field_tag(k, cookies[k]) if !params.has_key?(k) && cookies.has_key?(k)
+        end
+
         buffer << yield(f)
         buffer.html_safe
       end
