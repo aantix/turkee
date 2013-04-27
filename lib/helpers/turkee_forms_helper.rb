@@ -31,14 +31,17 @@ module Turkee
 
       if task.present?
         style =  "position: fixed; top: 120px; right: 30px; color: #FFF;"
-        style << "width: 400px; height: 250px; z-index: 100; padding: 10px;"
+        style << "width: 400px; height: 375px; z-index: 100; padding: 10px;"
         style << "background-color: rgba(0,0,0, 0.5); border: 1px solid #000;"
         div_for(task, :style => style) do
           content = content_tag(:h3, "DIRECTIONS")
           content << task.hit_description.html_safe
-          content << '<br/>'.html_safe
+          content << '<hr/>'.html_safe
           content << turkee_form_for(study, params) do |f|
-            buffer =  f.text_area(:feedback, :rows => 3, :disabled => disabled)
+            buffer =  f.label(:feedback, "Feedback?:")
+            buffer <<  f.text_area(:feedback, :rows => 3, :disabled => disabled)
+            buffer << f.label(:gold_response, "Enter the fourth word from your above feedback :")
+            buffer << f.text_field(:gold_response, :disabled => disabled)
             buffer << f.hidden_field(:turkee_task_id, :value => task.id)
             buffer << '<br/>'.html_safe
             buffer << f.submit('Submit', :disabled => disabled)

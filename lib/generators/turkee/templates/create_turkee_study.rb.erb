@@ -4,6 +4,7 @@ class CreateTurkeeStudy < ActiveRecord::Migration
         create_table "turkee_studies" do |t|
             t.integer "turkee_task_id"
             t.text "feedback"
+            t.string "gold_response"
             t.timestamps
         end
 

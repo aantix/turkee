@@ -1,5 +1,11 @@
 module Turkee
   class TurkeeStudy < ActiveRecord::Base
-    attr_accessible :turkee_task_id, :feedback
+    GOLD_RESPONSE_INDEX = 4
+    attr_accessible :turkee_task_id, :feedback, :gold_response
+
+    def approve?
+      words = feedback.split(/\W+/)
+      gold_response.present? ? (gold_response == words[GOLD_RESPONSE_INDEX]) : true
+    end
   end
 end

@@ -43,7 +43,8 @@ ActiveRecord::Schema.define(:version => 1) do
 
   create_table :turkee_studies do |t|
     t.integer :turkee_task_id
-    t.string :feedback
+    t.text :feedback
+    t.string :gold_response
   end
 
 end
