@@ -1,15 +1,21 @@
-require 'rubygems'
-require "bundler/setup"
+#require 'rubygems'
+#require "bundler/setup"
+
+require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 
 require 'factory_girl'
-require 'rspec'
 require 'spork'
-require 'rails'
+require 'rails/all'
 require 'rturk'
 require 'lockfile'
-require 'active_record'
+#require 'active_record'
+#require 'active_support/dependencies/autoload'
+#require 'action_view'
+require 'rspec/rails'
 
-ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
+
+
+#ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
 ActiveRecord::Schema.define(:version => 1) do
   create_table :turkee_tasks do |t|
     t.string   "hit_url"
@@ -34,6 +40,13 @@ ActiveRecord::Schema.define(:version => 1) do
   create_table :surveys do |t|
     t.string :answer
   end
+
+  create_table :turkee_studies do |t|
+    t.integer :turkee_task_id
+    t.text :feedback
+    t.string :gold_response
+  end
+
 end
 
 
@@ -53,6 +66,8 @@ Spork.prefork do
     # config.mock_with :flexmock
     # config.mock_with :rr
     config.mock_with :rspec
+
+    config.include Turkee::TurkeeFormHelper
 
     #config.fixture_path = "#{::Rails.root}/spec/fixtures"
 
