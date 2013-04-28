@@ -34,7 +34,7 @@ module Turkee
         style << "width: 400px; height: 375px; z-index: 100; padding: 10px;"
         style << "background-color: rgba(0,0,0, 0.5); border: 1px solid #000;"
         div_for(task, :style => style) do
-          content = content_tag(:h3, "DIRECTIONS", :style => 'text-align: right; font-color:#FFF;')
+          content = content_tag(:h3, "DIRECTIONS", :style => 'text-align: right; color:#FF0000;')
           content << task.hit_description.html_safe
           content << '<hr/>'.html_safe
           content << turkee_form_for(study, params) do |f|

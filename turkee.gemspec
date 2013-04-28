@@ -1,38 +1,24 @@
+# -*- encoding: utf-8 -*-
+$:.push File.expand_path("../lib", __FILE__)
+
 Gem::Specification.new do |s|
   s.name = %q{turkee}
-  s.version = "1.2.2"
+  s.version = "2.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Jim Jones}]
-  s.date = %q{2013-01-09}
-  s.description = %q{Turkee will help you to create your Rails forms, post the HITs, and retrieve the user entered values from Mechanical Turk.}
+  s.date = %q{2013-04-27}
+  s.description = %q{Turkee will help you to easily create usability studies, post HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
   s.extra_rdoc_files = [
     "LICENSE",
     "README.rdoc"
   ]
-  s.files = [
-    "Gemfile",
-    "Rakefile",
-    "lib/generators/turkee/templates/turkee.rb",
-    "lib/generators/turkee/templates/turkee_imported_assignments.rb.erb",
-    "lib/generators/turkee/templates/add_completed_tasks.rb.erb",
-    "lib/generators/turkee/templates/turkee_migration.rb.erb",
-    "lib/generators/turkee/templates/add_imported_assignment_details.rb.erb",
-    "lib/generators/turkee/templates/add_hit_duration.rb.erb",
-    "lib/generators/turkee/templates/add_expired.rb.erb",
-    "lib/generators/turkee/turkee_generator.rb",
-    "lib/tasks/turkee.rb",
-    "lib/turkee.rb",
-    "lib/models/turkee_imported_assignment.rb",
-    "lib/models/turkee_study.rb",
-    "lib/models/turkee_task.rb",
-    "lib/helpers/turkee_forms_helper.rb",
-    "lib/turkee.rb",
-    "spec/spec.opts",
-    "spec/spec_helper.rb",
-    "spec/models/turkee_task_spec.rb"
-  ]
+
+  s.files         = `git ls-files`.split("\n")
+  s.test_files    = `git ls-files -- {spec}/*`.split("\n")
+  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
+
   s.homepage = %q{http://github.com/aantix/turkee}
   s.post_install_message = %q{
   ========================================================================
@@ -49,10 +35,6 @@ Gem::Specification.new do |s|
 
   For instructions on gem usage, visit:
     http://github.com/aantix/turkee#readme
-
-  ** If you like the Turkee gem, please click the "watch" button on the
-  Github project page.  You'll make me smile and feel appreciated. :)
-    http://github.com/aantix/turkee
 
   ========================================================================
   -- Gobble, gobble.
