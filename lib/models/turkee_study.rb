@@ -1,6 +1,6 @@
 module Turkee
   class TurkeeStudy < ActiveRecord::Base
-    GOLD_RESPONSE_INDEX = 4
+    GOLD_RESPONSE_INDEX = 3
     attr_accessible :turkee_task_id, :feedback, :gold_response
 
     def approve?
