@@ -1,6 +1,8 @@
-== DESCRIPTION
+== WHAT TURKEE CAN DO
 
 * Perform user feedback studies easily.
+http://i.imgur.com/wIU40BAl.png
+
 * Seamlessly convert your Rails forms for use on Mechanical Turk.
 * Easily import the data posted by the Mechanical Turk workers back into your data models.
 
@@ -124,8 +126,6 @@ Or you can directly call :
 
     Turkee::TurkeeTask.process_hits
 
-
-== STUDIES
 
 == DATA RETRIEVAL; THE INS AND OUTS
 
