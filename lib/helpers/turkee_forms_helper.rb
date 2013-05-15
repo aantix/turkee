@@ -19,7 +19,7 @@ module Turkee
             concat hidden_field_tag(k, cookies[k]) if !params.has_key?(k) && cookies.has_key?(k)
           end
 
-          concat(yield(f))
+          concat(capture(f, &proc))
         end
       end
     end
@@ -40,15 +40,13 @@ module Turkee
             concat task.hit_description.html_safe
             concat '<hr/>'.html_safe
             concat(turkee_form_for(study, params) do |f|
-              capture do
-                concat f.label(:feedback, "Feedback?:")
-                concat f.text_area(:feedback, :rows => 3, :disabled => disabled)
-                concat f.label(:gold_response, "Enter the fourth word from your above feedback :")
-                concat f.text_field(:gold_response, :disabled => disabled)
-                concat f.hidden_field(:turkee_task_id, :value => task.id)
-                concat '<br/>'.html_safe
-                concat f.submit('Submit', :disabled => disabled)
-              end
+              concat f.label(:feedback, "Feedback?:")
+              concat f.text_area(:feedback, :rows => 3, :disabled => disabled)
+              concat f.label(:gold_response, "Enter the fourth word from your above feedback :")
+              concat f.text_field(:gold_response, :disabled => disabled)
+              concat f.hidden_field(:turkee_task_id, :value => task.id)
+              concat '<br/>'.html_safe
+              concat f.submit('Submit', :disabled => disabled)
             end)
           end
         end
