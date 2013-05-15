@@ -6,21 +6,21 @@ module Turkee
 
       options.merge!({:url => mturk_url})
 
-      buffer = ''
-      form_for record, options do |f|
-        params.each do |k,v|
-          unless ['action','controller'].include?(k) || !v.is_a?(String)
-            buffer << hidden_field_tag(k, v)
-            cookies[k] = v
+      capture do
+        form_for record, options do |f|
+          params.each do |k,v|
+            unless ['action','controller'].include?(k) || !v.is_a?(String)
+              concat hidden_field_tag(k, v)
+              cookies[k] = v
+            end
           end
-        end
 
-        ['assignmentId', 'workerId', 'hitId'].each do |k|
-          buffer << hidden_field_tag(k, cookies[k]) if !params.has_key?(k) && cookies.has_key?(k)
-        end
+          ['assignmentId', 'workerId', 'hitId'].each do |k|
+            concat hidden_field_tag(k, cookies[k]) if !params.has_key?(k) && cookies.has_key?(k)
+          end
 
-        buffer << yield(f)
-        buffer.html_safe
+          concat(yield(f))
+        end
       end
     end
 
@@ -33,21 +33,24 @@ module Turkee
         style =  "position: fixed; top: 120px; right: 30px; color: #FFF;"
         style << "width: 400px; height: 375px; z-index: 100; padding: 10px;"
         style << "background-color: rgba(0,0,0, 0.5); border: 1px solid #000;"
+
         div_for(task, :style => style) do
-          content = content_tag(:h3, "DIRECTIONS", :style => 'text-align: right; color:#FF0000;')
-          content << task.hit_description.html_safe
-          content << '<hr/>'.html_safe
-          content << turkee_form_for(study, params) do |f|
-            buffer =  f.label(:feedback, "Feedback?:")
-            buffer <<  f.text_area(:feedback, :rows => 3, :disabled => disabled)
-            buffer << f.label(:gold_response, "Enter the fourth word from your above feedback :")
-            buffer << f.text_field(:gold_response, :disabled => disabled)
-            buffer << f.hidden_field(:turkee_task_id, :value => task.id)
-            buffer << '<br/>'.html_safe
-            buffer << f.submit('Submit', :disabled => disabled)
-            buffer
-          end.html_safe
-          content
+          capture do
+            concat content_tag(:h3, "DIRECTIONS", :style => 'text-align: right; color:#FF0000;')
+            concat task.hit_description.html_safe
+            concat '<hr/>'.html_safe
+            concat(turkee_form_for(study, params) do |f|
+              capture do
+                concat f.label(:feedback, "Feedback?:")
+                concat f.text_area(:feedback, :rows => 3, :disabled => disabled)
+                concat f.label(:gold_response, "Enter the fourth word from your above feedback :")
+                concat f.text_field(:gold_response, :disabled => disabled)
+                concat f.hidden_field(:turkee_task_id, :value => task.id)
+                concat '<br/>'.html_safe
+                concat f.submit('Submit', :disabled => disabled)
+              end
+            end)
+          end
         end
       end
     end

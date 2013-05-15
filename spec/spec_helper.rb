@@ -39,6 +39,8 @@ ActiveRecord::Schema.define(:version => 1) do
 
   create_table :surveys do |t|
     t.string :answer
+    t.datetime :created_at, :null => false
+    t.datetime :updated_at, :null => false
   end
 
   create_table :turkee_studies do |t|
