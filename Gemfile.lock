@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    turkee (2.0.0)
+    turkee (2.0.1)
       lockfile
       rails (>= 3.1.1)
       rturk (>= 2.4.0)
