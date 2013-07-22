@@ -10,7 +10,7 @@ module Turkee
 
   class TurkeeTask < ActiveRecord::Base
     attr_accessible :sandbox, :hit_title, :hit_description, :hit_reward, :hit_num_assignments, :hit_lifetime, :hit_duration,
-                    :form_url, :hit_url, :hit_id, :task_type, :complete
+                    :form_url, :hit_url, :hit_id, :task_type, :complete if ActiveRecord::VERSION::MAJOR < 4
 
     HIT_FRAMEHEIGHT = 1000
 
