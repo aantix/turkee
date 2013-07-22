@@ -1,13 +1,16 @@
 require 'rubygems'
 require 'rake'
 require 'bundler'
+require 'rspec/core/rake_task'
 Bundler::GemHelper.install_tasks
 
 $:.push File.expand_path("../lib", __FILE__)
 
-task :default do
-  sh "rspec spec/"
-end
+desc "Run specs"
+RSpec::Core::RakeTask.new(:spec)
+
+desc 'Default: run specs.'
+task :default => :spec
 
 begin
   INSTALL_MESSAGE = %q{
@@ -35,8 +38,8 @@ begin
     gem.email = "jjones@aantix.com"
     gem.homepage = "http://github.com/aantix/turkee"
     gem.authors = ["Jim Jones"]
-    gem.add_dependency(%q<rails>, [">= 3.0.7"])
-    gem.add_dependency(%q<rturk>, [">= 2.3.0"])
+    gem.add_dependency(%q<rails>, [">= 3.1.1"])
+    gem.add_dependency(%q<rturk>, [">= 2.4.0"])
     gem.add_dependency(%q<lockfile>, [">= 1.4.3"])
 
     gem.post_install_message = INSTALL_MESSAGE
