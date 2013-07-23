@@ -14,7 +14,7 @@ describe Turkee::TurkeeFormHelper, :type => :helper do
 
   describe "turkee_study" do
     before do
-      @task = Factory(:turkee_task)
+      @task = create(:turkee_task)
       RTurk.stub(:sandbox?).and_return true
 
       helper.stub(:params).and_return({:assignmentId => '123456', :workerId => '987654'})
@@ -42,7 +42,7 @@ describe Turkee::TurkeeFormHelper, :type => :helper do
 
   describe "turkee_form_for" do
     before do
-      @survey = Factory(:survey)
+      @survey = create(:survey)
       RTurk.stub(:sandbox?).and_return true
 
       params = {:assignmentId => '123456', :workerId => '987654'}
