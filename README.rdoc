@@ -1,3 +1,7 @@
+== RAILS 4 SUPPORT
+Rails 4 support is currently being tested.  To try it out, just use Turkee's master branch. In your Gemfile, add the following :
+    gem 'turkee', :git => 'https://github.com/aantix/turkee.git', branch: 'master'
+    
 == WHAT TURKEE CAN DO
 
 * Perform user feedback studies easily.
