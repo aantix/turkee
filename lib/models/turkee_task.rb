@@ -71,7 +71,9 @@ module Turkee
       f_url = build_url(host, model, params, opts)
 
       h = RTurk::Hit.create(:title => hit_title) do |hit|
-        hit.assignments = num_assignments
+        hit.max_assignments = num_assignments if hit.respond_to?(:max_assignments)
+        hit.assignments = num_assignments if hit.respond_to?(:assignments)
+
         hit.description = hit_description
         hit.reward = reward
         hit.lifetime = lifetime.to_i.days.seconds.to_i
@@ -115,8 +117,8 @@ module Turkee
               assignment.approve!('__clear_all_turks__approved__') if assignment.status == 'Submitted'
             end
 
-            turkee_task = TurkeeTask.find_by_hit_id(hit.id)
-            turkee_task.complete_task
+            turkee_task = TurkeeTask.where(hit_id: hit.id).first
+            turkee_task.complete_task if turkee_task.present?
 
             hit.dispose!
           rescue Exception => e
