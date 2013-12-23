@@ -50,6 +50,21 @@ Run the migrations :
 
     rake db:migrate
 
+== MIXED CONTENT WARNINGS
+
+Mechanical Turk will open your forms in an iFrame from a secure URL (ssl).
+If you test locally with localhost, you're going to need to be running SSL so that you don't
+receive a mixed content warning within Chrome and a blank screen.
+Thin allows for local SSL.
+
+    # Gemfile
+    gem 'thin', :group => :development
+
+Then you can start the server by calling :
+
+    thin start --ssl
+
+
 == BASIC FORMS
 
 1) You should disable form controls if the Turker hasn't accepted the HIT.  You can determine this from your controller:
@@ -183,11 +198,6 @@ option to designate a form url different from the default.
 
     Turkee::TurkeeTask.create_hit(host, hit_title, hit_description, :Survey, num_assignments, reward,
         lifetime, duration, {}, {}, {:form_url => form_url})
-
-
-== Gotchas
-
-1) The application that hosts your external forms preferably should have an https interface (you're going to have to buy an SSL certificate).  If the forms are hosted on an unsecured host (http), because Mechanical Turk defaults to https, you're going to receive the ugly popup from IE regarding "mixed content" (http://msdn.microsoft.com/en-us/library/ee264315%28v=vs.85%29.aspx).
 
 
 == Copyright
