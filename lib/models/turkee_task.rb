@@ -244,7 +244,7 @@ module Turkee
 
     # Returns the default url of the model's :new route
     def self.form_url(host, typ, params = {})
-      @app ||= ActionController::Integration::Session.new(Rails.application)
+      @app ||= ActionDispatch::Integration::Session.new(Rails.application)
       url = (host + @app.send("new_#{typ.to_s.underscore}_path"))
       full_url(url, params)
     end
