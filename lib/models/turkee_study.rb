@@ -1,7 +1,8 @@
+require_retalive 'base'
+
 module Turkee
-  class TurkeeStudy < ActiveRecord::Base
+  class TurkeeStudy < Base
     GOLD_RESPONSE_INDEX = 3
-    attr_accessible :turkee_task_id, :feedback, :gold_response if ActiveRecord::VERSION::MAJOR < 4
 
     def approve?
       words = feedback.split(/\W+/)
