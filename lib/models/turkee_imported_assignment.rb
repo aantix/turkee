@@ -1,4 +1,4 @@
-require_retalive 'base'
+require_relative 'base'
 
 module Turkee
   class TurkeeImportedAssignment < Base

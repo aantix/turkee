@@ -5,7 +5,7 @@ require 'lockfile'
 require 'active_record'
 require "active_support/core_ext/object/to_query"
 require 'action_controller'
-require_retalive 'base'
+require_relative 'base'
 
 module Turkee
 
