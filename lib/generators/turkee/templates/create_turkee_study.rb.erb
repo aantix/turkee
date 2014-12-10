@@ -1,6 +1,9 @@
-class CreateTurkeeStudy < ActiveRecord::Migration
+require 'mechanical_turk_connection_migration'
+
+class CreateTurkeeStudy < MechanicalTurkConnectionMigration
 
     def self.up
+      self.with_connection do
         create_table "turkee_studies" do |t|
             t.integer "turkee_task_id"
             t.text "feedback"
@@ -9,10 +12,13 @@ class CreateTurkeeStudy < ActiveRecord::Migration
         end
 
         add_index :turkee_studies, :turkee_task_id
+      end
     end
 
     def self.down
+      self.with_connection do
         drop_table :turkee_studies
+      end
     end
 
 end

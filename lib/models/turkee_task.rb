@@ -9,7 +9,7 @@ require_relative 'base'
 
 module Turkee
 
-  class TurkeeTask < ActiveRecord::Base
+  class TurkeeTask < Base
 
     HIT_FRAMEHEIGHT = 1000
 
@@ -47,7 +47,7 @@ module Turkee
 
               TurkeeImportedAssignment.record_imported_assignment(assignment, result, turk)
             end
-
+            model.find_by_turkee_id(turk.id).update_from_turk
             turk.set_expired?(callback_models) if !turk.set_complete?(hit, callback_models)
           end
         end
@@ -60,7 +60,9 @@ module Turkee
     def self.save_imported_values(model, param_hash)
       key = model.to_s.underscore.gsub('/','_') # Namespaced model will come across as turkee/turkee_study,
                                                 #  we must translate to turkee_turkee_study"
-      model.create(param_hash[key])
+      record = model.find(params_hash[:key][:id])
+      params_hash[:key].delete(:id)
+      model.update(param_hash[:key])
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
@@ -223,13 +225,14 @@ module Turkee
     #  x = {:submit = 'Create', :iteration_vote => {:iteration_id => 1}}
     #  The above _should_ return an IterationVote model
     def self.find_model(param_hash)
-      param_hash.each do |k, v|
-        if v.is_a?(Hash)
-          model = k.to_s.camelize.constantize rescue next
-          return model if model.descends_from_active_record? rescue next
-        end
-      end
-      nil
+      params_hash.keys.include?(:model) ? RetailerProductQuery::RetailerProduct : nil
+      # param_hash.each do |k, v|
+      #   if v.is_a?(Hash)
+      #     model = k.to_s.camelize.constantize rescue next
+      #     return model if model.descends_from_active_record? rescue next
+      #   end
+      # end
+      # nil
     end
 
     # Returns custom URL if opts[:form_url] is specified.  Otherwise, builds the default url from the model's :new route
