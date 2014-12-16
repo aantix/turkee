@@ -38,7 +38,6 @@ module Turkee
               next if model.nil?
 
               callback_models << model
-
               result = save_imported_values(model, param_hash)
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
@@ -60,7 +59,6 @@ module Turkee
     def self.save_imported_values(model, param_hash)
       key = model.to_s.underscore.gsub('/','_') # Namespaced model will come across as turkee/turkee_study,
                                                 #  we must translate to turkee_turkee_study"
-      record = model.find(params_hash[:key][:id])
       params_hash[:key].delete(:id)
       model.update(param_hash[:key])
     end
@@ -225,7 +223,7 @@ module Turkee
     #  x = {:submit = 'Create', :iteration_vote => {:iteration_id => 1}}
     #  The above _should_ return an IterationVote model
     def self.find_model(param_hash)
-      params_hash.keys.include?(:model) ? RetailerProductQuery::RetailerProduct : nil
+      param_hash.keys.include?(:model) ? RetailerProductQuery::RetailerProduct : nil
       # param_hash.each do |k, v|
       #   if v.is_a?(Hash)
       #     model = k.to_s.camelize.constantize rescue next
