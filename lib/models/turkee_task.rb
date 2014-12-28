@@ -44,7 +44,7 @@ module Turkee
               #  otherwise just approve it by default
               turk.process_result(assignment, params["upc"], param_hash["retailer_product"]["upc"]) rescue print("!!" * 100)
 
-              TurkeeImportedAssignment.record_imported_assignment(assignment, instance, turk)
+              # TurkeeImportedAssignment.record_imported_assignment(assignment, instance, turk)
             end
 
             instance = RetailerProductQuery::RetailerProduct.find_by_turkee_task_id(turk.id)
