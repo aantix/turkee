@@ -25,13 +25,14 @@ module Turkee
         Lockfile.new('/tmp/turk_processor.lock', :max_age => 3600, :retries => 10) do
 
           turks = task_items(turkee_task)
+          instance = nil
           turks.each do |turk|
             hit = RTurk::Hit.new(turk.hit_id)
             params = self.extract_common_values(hit.assignments)
             next if params.empty?
             callback_models = Set.new
             hit.assignments.each do |assignment|
-              next unless submitted?(assignment.status)
+              # next unless submitted?(assignment.status)
               next if assignment_exists?(assignment)
 
               model, param_hash = map_imported_values(assignment, turk.task_type)
@@ -47,7 +48,7 @@ module Turkee
               TurkeeImportedAssignment.record_imported_assignment(assignment, instance, turk)
             end
             params.delete("model")
-            instance.update_from_params(params, "mechanical_turk")
+            instance.update_from_params(params, "mechanical_turk") if instance
             turk.set_expired?(callback_models) if !turk.set_complete?(hit, callback_models)
           end
         end
