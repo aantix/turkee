@@ -28,7 +28,7 @@ module Turkee
           turks.each do |turk|
             hit = RTurk::Hit.new(turk.hit_id)
             params = self.extract_common_values(hit.assignments)
-
+            next if params.empty?
             callback_models = Set.new
             hit.assignments.each do |assignment|
               next unless submitted?(assignment.status)
@@ -70,7 +70,7 @@ module Turkee
       params_list[0].keys.each do |key|
         value_list = params_list.map { |param| param[key] }
         results[key] = self.most_common_value(value_list)
-      end
+      end if params_list.length > 0
       results.compact
     end
 
