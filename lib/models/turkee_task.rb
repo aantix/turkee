@@ -25,9 +25,9 @@ module Turkee
         Lockfile.new('/tmp/turk_processor.lock', :max_age => 3600, :retries => 10) do
 
           turks = task_items(turkee_task)
-
           turks.each do |turk|
             hit = RTurk::Hit.new(turk.hit_id)
+            params = self.extract_common_values(hit.assignments)
 
             callback_models = Set.new
             hit.assignments.each do |assignment|
@@ -36,17 +36,18 @@ module Turkee
 
               model, param_hash = map_imported_values(assignment, turk.task_type)
               next if model.nil?
+              instance = model.find_by_turkee_task_id(turk.id)
 
               callback_models << model
-              result = save_imported_values(model, param_hash)
 
               # If there's a custom approve? method, see if we should approve the submitted assignment
               #  otherwise just approve it by default
-              turk.process_result(assignment, result)
+              turk.process_result(assignment, params["upc"], param_hash["retailer_product"]["upc"])
 
-              TurkeeImportedAssignment.record_imported_assignment(assignment, result, turk)
+              TurkeeImportedAssignment.record_imported_assignment(assignment, instance, turk)
             end
-            model.find_by_turkee_id(turk.id).update_from_turk
+            params.delete("model")
+            instance.update_from_params(params, "mechanical_turk")
             turk.set_expired?(callback_models) if !turk.set_complete?(hit, callback_models)
           end
         end
@@ -59,8 +60,25 @@ module Turkee
     def self.save_imported_values(model, param_hash)
       key = model.to_s.underscore.gsub('/','_') # Namespaced model will come across as turkee/turkee_study,
                                                 #  we must translate to turkee_turkee_study"
-      params_hash[:key].delete(:id)
+      param_hash[:key].delete(:id)
       model.update(param_hash[:key])
+    end
+
+    def self.extract_common_values(assignments)
+      results = {}
+      params_list = assignments.map { |assignment| Rack::Utils.parse_nested_query(assignment_params(assignment.answers))["retailer_product"] }
+      params_list[0].keys.each do |key|
+        value_list = params_list.map { |param| param[key] }
+        results[key] = self.most_common_value(value_list)
+      end
+      results.compact
+    end
+
+    def self.most_common_value(a)
+      result = a.group_by do |e|
+        e
+      end.values.max_by(&:size).first
+      a.select { |x| x == result }.count > 1 ? result : nil
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
@@ -157,18 +175,9 @@ module Turkee
       models.each { |model| model.send(method, self) if model.respond_to?(method) }
     end
 
-    def process_result(assignment, result)
-      if result.errors.size > 0
-        logger.info "Errors : #{result.inspect}"
-        assignment.reject!('Failed to enter proper data.')
-      elsif result.respond_to?(:approve?)
-        logger.debug "Approving : #{result.inspect}"
-        self.increment_complete_assignments
-        result.approve? ? assignment.approve!('') : assignment.reject!('Rejected criteria.')
-      else
-        self.increment_complete_assignments
-        assignment.approve!('')
-      end
+    def process_result(assignment, common_upc, current_upc)
+      self.increment_complete_assignments
+      (common_upc == current_upc && common_upc) ? assignment.approve!('') : assignment.reject!('UPC entered did not match other entries')
     end
 
     def increment_complete_assignments
