@@ -9,11 +9,11 @@ require_relative 'base'
 
 module Turkee
 
-  class TurkeeTask < Base
+  module BaseTask
 
     HIT_FRAMEHEIGHT = 1000
 
-    scope :unprocessed_hits, lambda { where('complete = ? AND sandbox = ?', false, RTurk.sandbox?) }
+    # scope :unprocessed_hits, lambda { where('complete = ? AND sandbox = ?', false, RTurk.sandbox?) }
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
@@ -60,7 +60,7 @@ module Turkee
 
     def self.save_imported_values(model, param_hash)
       key = model.to_s.underscore.gsub('/','_') # Namespaced model will come across as turkee/turkee_study,
-                                                #  we must translate to turkee_turkee_study"
+      #  we must translate to turkee_turkee_study"
       param_hash[:key].delete(:id)
       model.update(param_hash[:key])
     end
@@ -84,7 +84,7 @@ module Turkee
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
     def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime,
-                        duration = nil, qualifications = {}, params = {}, opts = {})
+      duration = nil, qualifications = {}, params = {}, opts = {})
       model = typ.to_s.constantize
       f_url = build_url(host, model, params, opts)
 
@@ -105,12 +105,12 @@ module Turkee
       end
 
       TurkeeTask.create(:sandbox => RTurk.sandbox?,
-                        :hit_title => hit_title, :hit_description => hit_description,
-                        :hit_reward => reward.to_f, :hit_num_assignments => num_assignments.to_i,
-                        :hit_lifetime => lifetime, :hit_duration => duration,
-                        :form_url => f_url, :hit_url => h.url,
-                        :hit_id => h.id, :task_type => typ,
-                        :complete => false)
+      :hit_title => hit_title, :hit_description => hit_description,
+      :hit_reward => reward.to_f, :hit_num_assignments => num_assignments.to_i,
+      :hit_lifetime => lifetime, :hit_duration => duration,
+      :form_url => f_url, :hit_url => h.url,
+      :hit_id => h.id, :task_type => typ,
+      :complete => false)
 
     end
 
