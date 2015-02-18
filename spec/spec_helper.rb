@@ -18,6 +18,7 @@ ActiveRecord::Schema.define(:version => 1) do
   create_table :turkee_tasks do |t|
     t.integer  "turkable_id"
     t.string   "turkable_type"
+    t.string   "type"
     t.string   "hit_url"
     t.boolean  "sandbox"
     t.text     "hit_title"
@@ -36,7 +37,7 @@ ActiveRecord::Schema.define(:version => 1) do
     t.boolean  "expired"
   end
 
-  create_table :turkee_responses do |t|
+  create_table :turkee_assignments do |t|
     t.integer  :turkee_task_id
     t.string   :turkee_assignment_processor_type
     t.string   :status

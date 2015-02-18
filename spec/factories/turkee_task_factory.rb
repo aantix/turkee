@@ -9,7 +9,7 @@ FactoryGirl.define do
     s.hit_id "123"
     s.hit_reward 0.05
     s.completed_assignments 0
-    s.hit_num_assignments 100
+    s.hit_num_assignments 3
     s.hit_lifetime 1
     s.hit_duration 1
     s.form_url "http://localhost/test_task/new"

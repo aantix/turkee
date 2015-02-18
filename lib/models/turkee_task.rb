@@ -13,6 +13,8 @@ module Turkee
 
     scope :unprocessed_hits, lambda { where('complete = ? AND sandbox = ?', false, RTurk.sandbox?) }
 
+    has_many :turkee_assignments
+
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
     #  accepting/rejecting the assignment and importing the data into their respective tables.
@@ -149,7 +151,7 @@ module Turkee
 
     end
 
-    def target_object
+    def turkable
       self.turkable_type.constantize.find(self.turkable_id)
     end
 
@@ -193,6 +195,10 @@ module Turkee
       save
     end
 
+    def completed_assignments?
+      hit_num_assignments == turkee_assignments.count
+    end
+
     private
 
     def logger
@@ -211,10 +217,6 @@ module Turkee
 
     def self.assignment_exists?(assignment)
       TurkeeImportedAssignment.find_by_assignment_id(assignment.id).present?
-    end
-
-    def completed_assignments?
-      completed_assignments == hit_num_assignments
     end
 
     def expired?
