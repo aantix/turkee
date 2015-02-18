@@ -5,15 +5,13 @@ require 'lockfile'
 require 'active_record'
 require "active_support/core_ext/object/to_query"
 require 'action_controller'
-require_relative 'base'
 
 module Turkee
-
-  module BaseTask
+  class TurkeeTask < ActiveRecord::Base
 
     HIT_FRAMEHEIGHT = 1000
 
-    # scope :unprocessed_hits, lambda { where('complete = ? AND sandbox = ?', false, RTurk.sandbox?) }
+    scope :unprocessed_hits, lambda { where('complete = ? AND sandbox = ?', false, RTurk.sandbox?) }
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
@@ -60,7 +58,7 @@ module Turkee
 
     def self.save_imported_values(model, param_hash)
       key = model.to_s.underscore.gsub('/','_') # Namespaced model will come across as turkee/turkee_study,
-      #  we must translate to turkee_turkee_study"
+                                                #  we must translate to turkee_turkee_study"
       param_hash[:key].delete(:id)
       model.update(param_hash[:key])
     end
@@ -84,7 +82,7 @@ module Turkee
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
     def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime,
-      duration = nil, qualifications = {}, params = {}, opts = {})
+                        duration = nil, qualifications = {}, params = {}, opts = {})
       model = typ.to_s.constantize
       f_url = build_url(host, model, params, opts)
 
@@ -104,13 +102,12 @@ module Turkee
         end
       end
 
-      TurkeeTask.create(:sandbox => RTurk.sandbox?,
-      :hit_title => hit_title, :hit_description => hit_description,
-      :hit_reward => reward.to_f, :hit_num_assignments => num_assignments.to_i,
-      :hit_lifetime => lifetime, :hit_duration => duration,
-      :form_url => f_url, :hit_url => h.url,
-      :hit_id => h.id, :task_type => typ,
-      :complete => false)
+      UpcTask.create(:sandbox => RTurk.sandbox?,
+                        :hit_title => hit_title, :hit_description => hit_description,
+                        :hit_reward => reward.to_f, :hit_num_assignments => num_assignments.to_i,
+                        :hit_lifetime => lifetime, :hit_duration => duration,
+                        :form_url => f_url, :hit_url => h.url,
+                        :hit_id => h.id, :complete => false)
 
     end
 
@@ -146,6 +143,10 @@ module Turkee
         end
       end
 
+    end
+
+    def target_object
+      self.turkable_type.constantize.find(self.turkable_id)
     end
 
     def complete_task
@@ -194,15 +195,15 @@ module Turkee
       @logger ||= Logger.new($stderr)
     end
 
-    def self.map_imported_values(assignment, default_type)
-      params     = assignment_params(assignment.answers)
-      param_hash = Rack::Utils.parse_nested_query(params)
+    # def self.map_imported_values(assignment, default_type)
+      # params     = assignment_params(assignment.answers)
+      # param_hash = Rack::Utils.parse_nested_query(params)
 
-      model      = find_model(param_hash)
-      model      = default_type.constantize if model.nil?
+      # model      = find_model(param_hash)
+      # model      = default_type.constantize if model.nil?
 
-      return model, param_hash
-    end
+      # return model, param_hash
+    # end
 
     def self.assignment_exists?(assignment)
       TurkeeImportedAssignment.find_by_assignment_id(assignment.id).present?
@@ -226,21 +227,6 @@ module Turkee
 
     def self.assignment_params(answers)
       answers.to_query
-    end
-
-    # Method looks at the parameter and attempts to find an ActiveRecord model
-    #  in the current app that would match the properties of one of the nested hashes
-    #  x = {:submit = 'Create', :iteration_vote => {:iteration_id => 1}}
-    #  The above _should_ return an IterationVote model
-    def self.find_model(param_hash)
-      param_hash.keys.include?(:model) ? RetailerProductQuery::RetailerProduct : nil
-      # param_hash.each do |k, v|
-      #   if v.is_a?(Hash)
-      #     model = k.to_s.camelize.constantize rescue next
-      #     return model if model.descends_from_active_record? rescue next
-      #   end
-      # end
-      # nil
     end
 
     # Returns custom URL if opts[:form_url] is specified.  Otherwise, builds the default url from the model's :new route

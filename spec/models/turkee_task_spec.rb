@@ -1,14 +1,6 @@
 require 'spec_helper'
 
 describe Turkee::TurkeeTask do
-  class TestTask < ActiveRecord::Base
-    def self.abstract_class
-      true
-    end
-
-    attr_accessor :description
-  end
-
   class Survey < ActiveRecord::Base
     def self.abstract_class
       true
@@ -119,15 +111,12 @@ describe Turkee::TurkeeTask do
 
   end
 
-  describe "#find_model" do
-    it "should return a turkee_task mode " do
-      returned_data = {:submit => 'Create', "test_task" => {:description => "desc"}}
-      Turkee::TurkeeTask.find_model(returned_data).should == TestTask
-    end
+  describe "#target_object" do
+    let(:test_target_object) { FactoryGirl.create(:test_target_object) }
+    let(:turkee_task) { FactoryGirl.create(:turkee_task, turkable_type: "TestTargetObject", turkable_id: test_target_object.id) }
 
-    it "should return a nil" do
-      returned_data = {:submit => 'Create', "another_task_class" => {:description => "desc"}}
-      Turkee::TurkeeTask.find_model(returned_data).should be_nil
+    it "should return the object this turkee task associated with" do
+      expect(turkee_task.target_object).to eq(test_target_object)
     end
   end
 

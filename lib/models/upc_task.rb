@@ -5,14 +5,10 @@ require 'lockfile'
 require 'active_record'
 require "active_support/core_ext/object/to_query"
 require 'action_controller'
-require_relative 'base_task'
-require_relative 'base'
 
 module Turkee
 
-  class UpcTask < Base
-
-    include BaseTask
+  class UpcTask < ActiveRecord::Base
 
     HIT_FRAMEHEIGHT = 1000
 
