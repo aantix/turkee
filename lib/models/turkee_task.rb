@@ -102,13 +102,17 @@ module Turkee
         end
       end
 
-      UpcTask.create(:sandbox => RTurk.sandbox?,
+      create(:sandbox => RTurk.sandbox?,
                         :hit_title => hit_title, :hit_description => hit_description,
                         :hit_reward => reward.to_f, :hit_num_assignments => num_assignments.to_i,
                         :hit_lifetime => lifetime, :hit_duration => duration,
                         :form_url => f_url, :hit_url => h.url,
                         :hit_id => h.id, :complete => false)
 
+    end
+
+    def self.create(params)
+      raise NotImplementedError.new("create method not implemeted")
     end
 
     ##########################################################################################################
