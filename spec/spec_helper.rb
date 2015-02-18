@@ -12,6 +12,7 @@ require 'lockfile'
 #require 'active_support/dependencies/autoload'
 #require 'action_view'
 require 'rspec/rails'
+require 'pry'
 
 #ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
 ActiveRecord::Schema.define(:version => 1) do

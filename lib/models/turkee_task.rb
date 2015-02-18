@@ -15,6 +15,42 @@ module Turkee
 
     has_many :turkee_assignments
 
+    def self.threshold
+      0.65
+    end
+
+    def self.expected_result_field
+      raise NotImplementedError.new("expected_result_fields method not implemeted")
+    end
+
+    def approval_criteria_for_all_assignments
+      result_field_name = Turkee::TurkeeTask.expected_result_field
+
+      valid_assignments = turkee_assignments.select do |assignment|
+        Turkee::TurkeeTask.valid_assignment?(assignment)
+      end
+
+      responses = valid_assignments.map do |assig|
+        assig.parsed_response[result_field_name]
+      end
+
+      common_value = Turkee::TurkeeTask.most_common_value(responses)
+
+      assignments_with_common_value = valid_assignments.select do |assig|
+        assig.parsed_response[result_field_name] == common_value
+      end
+
+      if (assignments_with_common_value.count / hit_num_assignments.to_f) > Turkee::TurkeeTask.threshold && common_value
+        { result_field_name => common_value }
+      else
+        nil
+      end
+    end
+
+    def self.valid_assignment?(assignment)
+
+    end
+
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
     #  accepting/rejecting the assignment and importing the data into their respective tables.
@@ -75,11 +111,20 @@ module Turkee
       results.compact
     end
 
-    def self.most_common_value(a)
-      result = a.group_by do |e|
-        e
-      end.values.max_by(&:size).first
-      a.select { |x| x == result }.count > 1 ? result : nil
+    def self.most_common_value(responses)
+      grouped = responses.group_by do |response|
+        response
+      end.values
+
+      result = grouped.map do |group|
+        { response: group.first, size: group.size }
+      end.sort{ |a, b| b[:size] <=> a[:size] }
+
+      if (result.size == 1) or ( result.size > 1 and result[0][:size] != result[1][:size])
+          result[0][:response]
+      else
+        nil
+      end
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc

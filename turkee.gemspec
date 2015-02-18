@@ -50,6 +50,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "mocha"
   s.add_development_dependency "sqlite3"
   s.add_development_dependency "spork"
+  s.add_development_dependency "pry"
 
   # RSpec has to be in both test and development so that rake tasks and generators
   # are available without having to explicitly switch the environment to 'test'

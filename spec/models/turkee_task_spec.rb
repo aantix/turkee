@@ -102,7 +102,75 @@ describe Turkee::TurkeeTask do
       Survey.should_receive(:hit_complete).once
       @turkee_task.initiate_callback(:hit_complete, [Survey])
     end
+  end
 
+  describe ".valid_assignment?" do
+
+  end
+
+  describe "#approval_criteria_for_all_assignments" do
+    let(:turkee_task) { FactoryGirl.create(:turkee_task, hit_num_assignments: 3) }
+    let(:assignemnt_1) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:assignemnt_2) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:assignemnt_3) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:all_assignments) { [ assignemnt_1, assignemnt_2, assignemnt_3 ] }
+
+    before do
+      all_assignments.each do |assignment|
+        Turkee::TurkeeTask.stub(:valid_assignment?).with(assignment) { true }
+      end
+      Turkee::TurkeeTask.stub(:expected_result_field) { :mt_data }
+      turkee_task.stub(:turkee_assignments) { all_assignments }
+    end
+
+    context "when there is mutual agreement on the answer" do
+      before do
+        assignemnt_1.stub(:parsed_response) { { mt_data: "23412" } }
+        assignemnt_2.stub(:parsed_response) { { mt_data: "23412" } }
+        assignemnt_3.stub(:parsed_response) { { mt_data: "12345" } }
+      end
+
+      context "when number of assignments meet individual approval criteria over total number of assignments exceeds threshold" do
+        it "returns the shared result" do
+          result = turkee_task.approval_criteria_for_all_assignments
+          expect(result[:mt_data]).to eq("23412")
+        end
+      end
+    end
+
+    context "when there is no mutial agreement on the answer" do
+      before do
+        assignemnt_1.stub(:parsed_response) { { mt_data: "23412" } }
+        assignemnt_2.stub(:parsed_response) { { mt_data: "13412" } }
+        assignemnt_3.stub(:parsed_response) { { mt_data: "12345" } }
+      end
+
+      it "returns nil" do
+        result = turkee_task.approval_criteria_for_all_assignments
+        expect(result).to be_nil
+      end
+    end
+  end
+
+  describe "#approvable_assignments" do
+    context "" do
+
+    end
+  end
+
+  describe ".most_common_value" do
+    context "with multiple common value groups" do
+      it "returns nil" do
+        expect(Turkee::TurkeeTask.most_common_value([1 ,2 ,3])).to be_nil
+        expect(Turkee::TurkeeTask.most_common_value([1, 1, 2 , 2, 3, 3])).to be_nil
+      end
+    end
+
+    context "with only one common value group" do
+      it "returns the most common value" do
+        expect(Turkee::TurkeeTask.most_common_value([3 ,2 ,3])).to eq(3)
+      end
+    end
   end
 
   describe "#turkable" do
