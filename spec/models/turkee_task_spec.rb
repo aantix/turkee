@@ -104,57 +104,87 @@ describe Turkee::TurkeeTask do
     end
   end
 
-  describe ".valid_assignment?" do
-
-  end
-
   describe "#approval_criteria_for_all_assignments" do
     let(:turkee_task) { FactoryGirl.create(:turkee_task, hit_num_assignments: 3) }
-    let(:assignemnt_1) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
-    let(:assignemnt_2) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
-    let(:assignemnt_3) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
-    let(:all_assignments) { [ assignemnt_1, assignemnt_2, assignemnt_3 ] }
+    let(:assignment_1) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:assignment_2) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:assignment_3) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:all_assignments) { [ assignment_1, assignment_2, assignment_3 ] }
 
     before do
-      all_assignments.each do |assignment|
-        Turkee::TurkeeTask.stub(:valid_assignment?).with(assignment) { true }
-      end
       Turkee::TurkeeTask.stub(:expected_result_field) { :mt_data }
       turkee_task.stub(:turkee_assignments) { all_assignments }
     end
 
-    context "when there is mutual agreement on the answer" do
+    context "when there are valid assignments" do
       before do
-        assignemnt_1.stub(:parsed_response) { { mt_data: "23412" } }
-        assignemnt_2.stub(:parsed_response) { { mt_data: "23412" } }
-        assignemnt_3.stub(:parsed_response) { { mt_data: "12345" } }
+        all_assignments.each do |assignment|
+          Turkee::TurkeeTask.stub(:valid_assignment?).with(assignment) { true }
+        end
       end
 
-      context "when number of assignments meet individual approval criteria over total number of assignments exceeds threshold" do
-        it "returns the shared result" do
+      context "when there is mutual agreement on the answer" do
+        before do
+          assignment_1.stub(:parsed_response) { { mt_data: "23412" } }
+          assignment_2.stub(:parsed_response) { { mt_data: "23412" } }
+          assignment_3.stub(:parsed_response) { { mt_data: "12345" } }
+        end
+
+        context "when number of assignments meet individual approval criteria over total number of assignments exceeds threshold" do
+          it "returns the shared result" do
+            result = turkee_task.approval_criteria_for_all_assignments
+            expect(result[:mt_data]).to eq("23412")
+          end
+        end
+      end
+
+      context "when there is no mutial agreement on the answer" do
+        before do
+          assignment_1.stub(:parsed_response) { { mt_data: "23412" } }
+          assignment_2.stub(:parsed_response) { { mt_data: "13412" } }
+          assignment_3.stub(:parsed_response) { { mt_data: "12345" } }
+        end
+
+        it "returns nil" do
           result = turkee_task.approval_criteria_for_all_assignments
-          expect(result[:mt_data]).to eq("23412")
+          expect(result).to be_nil
         end
       end
     end
 
-    context "when there is no mutial agreement on the answer" do
+    context "when there is no valid assignments" do
       before do
-        assignemnt_1.stub(:parsed_response) { { mt_data: "23412" } }
-        assignemnt_2.stub(:parsed_response) { { mt_data: "13412" } }
-        assignemnt_3.stub(:parsed_response) { { mt_data: "12345" } }
+        all_assignments.each do |assignment|
+          Turkee::TurkeeTask.stub(:valid_assignment?).with(assignment) { false }
+        end
       end
 
       it "returns nil" do
-        result = turkee_task.approval_criteria_for_all_assignments
-        expect(result).to be_nil
+        expect(turkee_task.approval_criteria_for_all_assignments).to be_nil
       end
     end
   end
 
   describe "#approvable_assignments" do
-    context "" do
+    let(:turkee_task) { FactoryGirl.create(:turkee_task, hit_num_assignments: 3) }
+    let(:assignment_1) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:assignment_2) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:assignment_3) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
+    let(:all_assignments) { [ assignment_1, assignment_2, assignment_3 ] }
 
+    before do
+      Turkee::TurkeeTask.stub(:expected_result_field) { :mt_data }
+      turkee_task.stub(:turkee_assignments) { all_assignments }
+      assignment_1.stub(:parsed_response) { { mt_data: "23412" } }
+      assignment_2.stub(:parsed_response) { { mt_data: "23412" } }
+      assignment_3.stub(:parsed_response) { { mt_data: "12345" } }
+      all_assignments.each do |assignment|
+        Turkee::TurkeeTask.stub(:valid_assignment?).with(assignment) { true }
+      end
+    end
+
+    it "returns assignments with the most common value data field" do
+      expect(turkee_task.approvable_assignments).to eq([assignment_1, assignment_2])
     end
   end
 

@@ -20,7 +20,11 @@ module Turkee
     end
 
     def self.expected_result_field
-      raise NotImplementedError.new("expected_result_fields method not implemeted")
+      raise NotImplementedError.new("expected_result_field method not implemeted")
+    end
+
+    def self.valid_assignment?(assignment)
+      raise NotImplementedError.new("valid_assignment? method not implemeted")
     end
 
     def approval_criteria_for_all_assignments
@@ -47,8 +51,13 @@ module Turkee
       end
     end
 
-    def self.valid_assignment?(assignment)
-
+    def approvable_assignments
+      approval_criteria = approval_criteria_for_all_assignments
+      turkee_assignments.select do |assig|
+        approval_criteria.keys.map do |approval_key|
+          assig.parsed_response[approval_key] == approval_criteria[approval_key]
+        end.all?
+      end
     end
 
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
