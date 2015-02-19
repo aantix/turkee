@@ -59,7 +59,7 @@ module Turkee
       approval_criteria = approval_criteria_for_all_assignments
       turkee_assignments.select do |assig|
         approval_criteria.keys.map do |approval_key|
-          assig.parsed_response[approval_key] == approval_criteria[approval_key]
+          assig.parsed_response[turkable_key][approval_key] == approval_criteria[approval_key]
         end.all?
       end
     end
@@ -174,6 +174,7 @@ module Turkee
 
     def initiate_callback(method)
       turkable.send(method, self) if turkable.respond_to?(method)
+      true
     end
 
     def completed_assignments?

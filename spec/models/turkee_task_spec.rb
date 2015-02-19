@@ -1,18 +1,9 @@
 require 'spec_helper'
 
 describe Turkee::TurkeeTask do
-  class Survey < ActiveRecord::Base
-    def self.abstract_class
-      true
-    end
+  let(:turkable) { TestTargetObject.create }
 
-    def self.hit_complete(hit)
-    end
-  end
-
-  # TODO: create_hit should be instance method
-  # TODO: unit test for create_hit
-
+  # TODO: unit test for create_hit method
   describe ".expired?" do
     it "is not expired" do
       turkee_task = FactoryGirl.create(:turkee_task)
@@ -36,15 +27,15 @@ describe Turkee::TurkeeTask do
     context "completed hits" do
       before do
         @turkee_task = FactoryGirl.create(:turkee_task,
+                                          :turkable_type => "TestTargetObject",
+                                          :turkable_id => turkable.id,
                                           :hit_num_assignments => 100,
                                           :completed_assignments => 100)
         @turkee_task.stub(:completed_assignments?) { true }
       end
 
       it "marks the turkee task as complete" do
-        @hit.should_receive(:dispose!).once
-        Survey.should_receive(:hit_complete).once
-        @turkee_task.set_complete?(@hit, [Survey])
+        @turkee_task.set_complete?
         @turkee_task.complete.should be_true
       end
     end
@@ -52,6 +43,8 @@ describe Turkee::TurkeeTask do
     context "incomplete hits" do
       before do
         @turkee_task = FactoryGirl.create(:turkee_task,
+                                          :turkable_type => "TestTargetObject",
+                                          :turkable_id => turkable.id,
                                           :hit_num_assignments => 99,
                                           :completed_assignments => 100)
         @turkee_task.stub(:completed_assignments?) { false }
@@ -59,8 +52,7 @@ describe Turkee::TurkeeTask do
 
       it "keeps the turkee task as incomplete" do
         @hit.should_not_receive(:dispose!)
-        Survey.should_not_receive(:hit_complete)
-        @turkee_task.set_complete?(@hit, [Survey]).should be_false
+        @turkee_task.set_complete?.should be_false
         @turkee_task.complete.should be_false
       end
     end
@@ -73,8 +65,7 @@ describe Turkee::TurkeeTask do
       end
 
       it "keeps the turkee task as unexpired" do
-        Survey.should_not_receive(:hit_expired)
-        @turkee_task.set_expired?([Survey])
+        @turkee_task.set_expired?
         @turkee_task.expired.should be_false
       end
     end
@@ -82,13 +73,14 @@ describe Turkee::TurkeeTask do
     context "expired hits" do
       before do
         @turkee_task = FactoryGirl.create(:turkee_task,
+                                          :turkable_type => "TestTargetObject",
+                                          :turkable_id => turkable.id,
                                           :created_at => 2.days.ago,
                                           :hit_lifetime => 1)
       end
 
       it "marks the turkee task as expired" do
-        Survey.should_receive(:hit_expired)
-        @turkee_task.set_expired?([Survey]).should be_true
+        @turkee_task.set_expired?.should be_true
         @turkee_task.expired.should be_true
       end
     end
@@ -96,23 +88,27 @@ describe Turkee::TurkeeTask do
 
   describe ".initiate_callback" do
     before do
-      @turkee_task = FactoryGirl.create(:turkee_task)
+      @turkee_task = FactoryGirl.create(:turkee_task,
+                                        :turkable_type => "TestTargetObject",
+                                        :turkable_id => turkable.id)
     end
     it "calls hit_complete for the given callback model" do
-      Survey.should_receive(:hit_complete).once
-      @turkee_task.initiate_callback(:hit_complete, [Survey])
+      @turkee_task.initiate_callback(:hit_complete)
     end
   end
 
   describe "#approval_criteria_for_all_assignments" do
-    let(:turkee_task) { FactoryGirl.create(:turkee_task, hit_num_assignments: 3) }
+    let(:turkee_task) { FactoryGirl.create(:turkee_task,
+                                          :turkable_type => "TestTargetObject",
+                                          :turkable_id => turkable.id,
+                                           hit_num_assignments: 3) }
     let(:assignment_1) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
     let(:assignment_2) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
     let(:assignment_3) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
     let(:all_assignments) { [ assignment_1, assignment_2, assignment_3 ] }
 
     before do
-      Turkee::TurkeeTask.stub(:expected_result_field) { :mt_data }
+      Turkee::TurkeeTask.stub(:expected_result_field) { "mt_data" }
       turkee_task.stub(:turkee_assignments) { all_assignments }
     end
 
@@ -125,24 +121,24 @@ describe Turkee::TurkeeTask do
 
       context "when there is mutual agreement on the answer" do
         before do
-          assignment_1.stub(:parsed_response) { { mt_data: "23412" } }
-          assignment_2.stub(:parsed_response) { { mt_data: "23412" } }
-          assignment_3.stub(:parsed_response) { { mt_data: "12345" } }
+          assignment_1.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "23412" } } }
+          assignment_2.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "23412" } } }
+          assignment_3.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "12345" } } }
         end
 
         context "when number of assignments meet individual approval criteria over total number of assignments exceeds threshold" do
           it "returns the shared result" do
             result = turkee_task.approval_criteria_for_all_assignments
-            expect(result[:mt_data]).to eq("23412")
+            expect(result["mt_data"]).to eq("23412")
           end
         end
       end
 
       context "when there is no mutial agreement on the answer" do
         before do
-          assignment_1.stub(:parsed_response) { { mt_data: "23412" } }
-          assignment_2.stub(:parsed_response) { { mt_data: "13412" } }
-          assignment_3.stub(:parsed_response) { { mt_data: "12345" } }
+          assignment_1.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "23412" } } }
+          assignment_2.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "13412" } } }
+          assignment_3.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "12345" } } }
         end
 
         it "returns nil" do
@@ -166,18 +162,21 @@ describe Turkee::TurkeeTask do
   end
 
   describe "#approvable_assignments" do
-    let(:turkee_task) { FactoryGirl.create(:turkee_task, hit_num_assignments: 3) }
+    let(:turkee_task) { FactoryGirl.create(:turkee_task,
+                                          :turkable_type => "TestTargetObject",
+                                          :turkable_id => turkable.id,
+                                           hit_num_assignments: 3) }
     let(:assignment_1) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
     let(:assignment_2) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
     let(:assignment_3) { FactoryGirl.create(:turkee_assignment, turkee_task_id: turkee_task.id) }
     let(:all_assignments) { [ assignment_1, assignment_2, assignment_3 ] }
 
     before do
-      Turkee::TurkeeTask.stub(:expected_result_field) { :mt_data }
+      Turkee::TurkeeTask.stub(:expected_result_field) { "mt_data" }
       turkee_task.stub(:turkee_assignments) { all_assignments }
-      assignment_1.stub(:parsed_response) { { mt_data: "23412" } }
-      assignment_2.stub(:parsed_response) { { mt_data: "23412" } }
-      assignment_3.stub(:parsed_response) { { mt_data: "12345" } }
+      assignment_1.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "23412" } } }
+      assignment_2.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "23412" } } }
+      assignment_3.stub(:parsed_response) { { "test_target_object" => { "mt_data" => "12345" } } }
       all_assignments.each do |assignment|
         Turkee::TurkeeTask.stub(:valid_assignment?).with(assignment) { true }
       end
@@ -186,10 +185,6 @@ describe Turkee::TurkeeTask do
     it "returns assignments with the most common value data field" do
       expect(turkee_task.approvable_assignments).to eq([assignment_1, assignment_2])
     end
-  end
-
-  describe "#update_target_object" do
-
   end
 
   describe "#import_assignments" do
@@ -204,17 +199,6 @@ describe Turkee::TurkeeTask do
       mt_assignment.stub_chain(:answers, :to_query) { response }
       rturk_hit.stub(:assignments) { mt_assignments }
     end
-
-    # integration test
-    # context "when assignments doest not exist" do
-      # it "imports assignments from mechanical turk for the task" do
-        # expect(Turkee::TurkeeAssignment.all.count).to eq(0)
-
-        # expect{ turkee_task.import_assignments }.to change{
-          # Turkee::TurkeeAssignment.all.count
-        # }.by(3)
-      # end
-    # end
   end
 
   describe ".most_common_value" do

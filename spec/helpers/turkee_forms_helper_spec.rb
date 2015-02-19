@@ -14,17 +14,17 @@ describe Turkee::TurkeeFormHelper, :type => :helper do
 
   describe "turkee_form_for" do
     before do
-      @survey = create(:test_target_object)
+      @test_target_object = create(:test_target_object)
       RTurk.stub(:sandbox?).and_return true
 
       params = {:assignmentId => '123456', :workerId => '987654'}
-      @survey_form = helper.turkee_form_for(@survey, params) do |f|
-        f.text_field :answer
+      @survey_form = helper.turkee_form_for(@test_target_object, params) do |f|
+        f.text_field :category
       end
     end
 
     it "displays the passed in assignmentId and workerId " do
-      @survey_form.should match(/answer/)
+      @survey_form.should match(/category/)
       @survey_form.should match(/type=\"text\"/)
       @survey_form.should match(/assignmentId/)
       @survey_form.should match(/workerId/)
@@ -35,8 +35,8 @@ describe Turkee::TurkeeFormHelper, :type => :helper do
       helper.cookies['workerId'].should == '987654'
 
       # Subsequent requests should still return form fields for assignmentId
-      survey_form = helper.turkee_form_for(@survey, {}) do |f|
-        f.text_field :answer
+      survey_form = helper.turkee_form_for(@test_target_object, {}) do |f|
+        f.text_field :category
       end
       survey_form.should match(/123456/)
       survey_form.should match(/987654/)
