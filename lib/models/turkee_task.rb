@@ -193,7 +193,7 @@ module Turkee
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
-    def self.create_hit(host, hit_title, hit_description, turkable, num_assignments, reward, lifetime,
+    def self.create_hit(turkee_task_type, host, hit_title, hit_description, turkable, num_assignments, reward, lifetime,
                         duration, f_url, qualifications = {})
       h = RTurk::Hit.create(:title => hit_title) do |hit|
         hit.max_assignments = num_assignments if hit.respond_to?(:max_assignments)
@@ -211,7 +211,7 @@ module Turkee
         end
       end
 
-      create(sandbox: RTurk.sandbox?,
+      create(type: turkee_task_type, sandbox: RTurk.sandbox?,
              hit_title: hit_title, hit_description: hit_description,
              hit_reward: reward.to_f, hit_num_assignments: num_assignments.to_i,
              hit_lifetime: lifetime, hit_duration: duration,

@@ -50,7 +50,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency "mocha"
   s.add_development_dependency "sqlite3"
   s.add_development_dependency "spork"
-  s.add_development_dependency "pry"
+  s.add_development_dependency "pry-byebug"
+  s.add_development_dependency "pry-rescue"
   s.add_development_dependency "webmock", '1.11.0'
   s.add_development_dependency "vcr"
 

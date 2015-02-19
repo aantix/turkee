@@ -50,7 +50,7 @@ class TestTurkeeTask < Turkee::TurkeeTask
 
     def create_hit(turkable, qualifications={})
       f_url = form_url(turkable, {})
-      Turkee::TurkeeTask.create_hit(host, hit_title, hit_description, turkable, num_assignments,
+      Turkee::TurkeeTask.create_hit(self.name, host, hit_title, hit_description, turkable, num_assignments,
                                     reward, lifetime, duration, f_url, qualifications)
     end
   end
