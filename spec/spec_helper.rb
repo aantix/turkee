@@ -14,6 +14,7 @@ require 'lockfile'
 require 'rspec/rails'
 require_relative './vcr_setup.rb'
 require 'turkee'
+require 'timecop'
 require 'pry'
 
 #ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")

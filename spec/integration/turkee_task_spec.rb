@@ -2,8 +2,14 @@ require "spec_helper"
 
 describe Turkee::TurkeeTask, :vcr do
   let(:sandbox) { true }
+
   before do
     RTurk.setup(ENV['AWSACCESSKEYID'], ENV['AWSSECRETACCESSKEY'], :sandbox => sandbox)
+    Timecop.freeze(Time.local(2015, 2, 19, 15, 15, 23))
+  end
+
+  after do
+    Timecop.return
   end
 
   describe ".create_hit" do

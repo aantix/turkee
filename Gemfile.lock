@@ -128,6 +128,7 @@ GEM
     thread_safe (0.1.0)
       atomic
     tilt (1.4.1)
+    timecop (0.7.2)
     treetop (1.4.14)
       polyglot
       polyglot (>= 0.3.1)
@@ -148,6 +149,7 @@ DEPENDENCIES
   rspec-rails (~> 2.6)
   spork
   sqlite3
+  timecop
   turkee!
   vcr
   webmock (= 1.11.0)

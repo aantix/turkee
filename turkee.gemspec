@@ -54,6 +54,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "pry-rescue"
   s.add_development_dependency "webmock", '1.11.0'
   s.add_development_dependency "vcr"
+  s.add_development_dependency "timecop"
 
   # RSpec has to be in both test and development so that rake tasks and generators
   # are available without having to explicitly switch the environment to 'test'
