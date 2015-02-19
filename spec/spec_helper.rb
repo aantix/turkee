@@ -13,6 +13,7 @@ require 'lockfile'
 #require 'action_view'
 require 'rspec/rails'
 require_relative './vcr_setup.rb'
+require 'turkee'
 require 'pry'
 
 #ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")

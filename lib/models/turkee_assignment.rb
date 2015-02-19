@@ -16,6 +16,10 @@ module Turkee
       update_attributes(status: REJECTED)
     end
 
+    def parsed_response
+      JSON.load(response)
+    end
+
     private
 
     def rturk_assignment

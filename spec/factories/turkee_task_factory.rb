@@ -1,4 +1,3 @@
-require 'turkee'
 FactoryGirl.define do
   factory :turkee_task, :class => Turkee::TurkeeTask do |s|
     s.hit_url "http://workersandbox.mturk.com/mturk/preview?groupId=248SVGULF395SZ65OC6S6NYNJDXAO5"

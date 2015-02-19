@@ -111,12 +111,12 @@ module Turkee
 
       hit.assignments.each do |mt_assignment|
         response = Rack::Utils.parse_nested_query(mt_assignment.answers.to_query)
-        assignment_params = { assignment_id: mt_assignment.assignment_id,
+        assignment_params = { mt_assignment_id: mt_assignment.assignment_id,
                               worker_id: mt_assignment.worker_id,
                               turkee_task_id: self.id }
 
-        turkee_assignment = Turkee::TurekeeAssignment.where(assignment_params).first_or_create
-        turkee_assignment.update_attributes(response: response)
+        turkee_assignment = Turkee::TurkeeAssignment.where(assignment_params).first_or_create
+        turkee_assignment.update_attributes(response: JSON.dump(response))
       end
     end
 

@@ -1,7 +1,7 @@
 class TestTurkeeTask < Turkee::TurkeeTask
   class << self
     def expected_result_field
-      "mt_data"
+      "category"
     end
 
     def valid_assignment?(assignment)
