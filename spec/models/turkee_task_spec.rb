@@ -188,6 +188,35 @@ describe Turkee::TurkeeTask do
     end
   end
 
+  describe "#update_target_object" do
+
+  end
+
+  describe "#import_assignments" do
+    let(:turkee_task) { FactoryGirl.create(:turkee_task) }
+    let(:rturk_hit) { double }
+    let(:mt_assignment) { double }
+    let(:mt_assignments) { [mt_assignment] }
+    let(:response) { double }
+
+    before do
+      RTurk::Hit.stub(:new).with(turkee_task.hit_id) { rturk_hit }
+      mt_assignment.stub_chain(:answers, :to_query) { response }
+      rturk_hit.stub(:assignments) { mt_assignments }
+    end
+
+    # integration test
+    # context "when assignments doest not exist" do
+      # it "imports assignments from mechanical turk for the task" do
+        # expect(Turkee::TurkeeAssignment.all.count).to eq(0)
+
+        # expect{ turkee_task.import_assignments }.to change{
+          # Turkee::TurkeeAssignment.all.count
+        # }.by(3)
+      # end
+    # end
+  end
+
   describe ".most_common_value" do
     context "with multiple common value groups" do
       it "returns nil" do

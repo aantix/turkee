@@ -63,62 +63,118 @@ module Turkee
     # Use this method to go out and retrieve the data for all of the posted Turk Tasks.
     #  Each specific TurkeeTask object (determined by task_type field) is in charge of
     #  accepting/rejecting the assignment and importing the data into their respective tables.
-    def self.process_hits(turkee_task = nil)
+    # def self.process_hits(turkee_task = nil)
 
-      begin
-        # Using a lockfile to prevent multiple calls to Amazon.
-        Lockfile.new('/tmp/turk_processor.lock', :max_age => 3600, :retries => 10) do
+    # begin
+    # # Using a lockfile to prevent multiple calls to Amazon.
+    # Lockfile.new('/tmp/turk_processor.lock', :max_age => 3600, :retries => 10) do
 
-          turks = task_items(turkee_task)
-          instance = nil
-          turks.each do |turk|
-            hit = RTurk::Hit.new(turk.hit_id)
-            params = self.extract_common_values(hit.assignments)
-            next if params.empty?
-            callback_models = Set.new
-            hit.assignments.each do |assignment|
-              # next unless submitted?(assignment.status)
-              next if assignment_exists?(assignment)
+    # turks = task_items(turkee_task)
+    # instance = nil
+    # turks.each do |turk|
+    # hit = RTurk::Hit.new(turk.hit_id)
+    # params = self.extract_common_values(hit.assignments)
+    # next if params.empty?
+    # callback_models = Set.new
+    # hit.assignments.each do |assignment|
+    # # next unless submitted?(assignment.status)
+    # next if assignment_exists?(assignment)
 
-              model, param_hash = map_imported_values(assignment, turk.task_type)
-              next if model.nil?
+    # model, param_hash = map_imported_values(assignment, turk.task_type)
+    # next if model.nil?
 
-              callback_models << model
+    # callback_models << model
 
-              # If there's a custom approve? method, see if we should approve the submitted assignment
-              #  otherwise just approve it by default
-              # turk.process_result(assignment, params["upc"], param_hash["retailer_product"]["upc"]) rescue print("!!" * 100)
+    # # If there's a custom approve? method, see if we should approve the submitted assignment
+    # #  otherwise just approve it by default
+    # # turk.process_result(assignment, params["upc"], param_hash["retailer_product"]["upc"]) rescue print("!!" * 100)
 
-              # TurkeeImportedAssignment.record_imported_assignment(assignment, instance, turk)
-            end
-            instance = RetailerProductQuery::RetailerProduct.find_by_turkee_task_id(turk.id)
-            params.delete("model")
-            instance.update_from_params(params, "mechanical_turk") if instance
-            # turk.set_expired?(callback_models) if !turk.set_complete?(hit, callback_models)
-          end
-        end
-      rescue Lockfile::MaxTriesLockError => e
-        logger.info "TurkTask.process_hits is already running or the lockfile /tmp/turk_processor.lock exists from an improperly shutdown previous process. Exiting method call."
+    # # TurkeeImportedAssignment.record_imported_assignment(assignment, instance, turk)
+    # end
+    # instance = RetailerProductQuery::RetailerProduct.find_by_turkee_task_id(turk.id)
+    # params.delete("model")
+    # instance.update_from_params(params, "mechanical_turk") if instance
+    # # turk.set_expired?(callback_models) if !turk.set_complete?(hit, callback_models)
+    # end
+    # end
+    # rescue Lockfile::MaxTriesLockError => e
+    # logger.info "TurkTask.process_hits is already running or the lockfile /tmp/turk_processor.lock exists from an improperly shutdown previous process. Exiting method call."
+    # end
+    # end
+    #
+    def update_target_object
+      raise NotImplementedError.new("update_target_object method not implemeted")
+    end
+
+    def import_assignments
+      hit = RTurk::Hit.new(self.hit_id)
+
+      hit.assignments.each do |mt_assignment|
+        response = Rack::Utils.parse_nested_query(mt_assignment.answers.to_query)
+        assignment_params = { assignment_id: mt_assignment.assignment_id,
+                              worker_id: mt_assignment.worker_id,
+                              turkee_task_id: self.id }
+
+        turkee_assignment = Turkee::TurekeeAssignment.where(assignment_params).first_or_create
+        turkee_assignment.update_attributes(response: response)
       end
-
     end
 
-    def self.save_imported_values(model, param_hash)
-      key = model.to_s.underscore.gsub('/','_') # Namespaced model will come across as turkee/turkee_study,
-                                                #  we must translate to turkee_turkee_study"
-      param_hash[:key].delete(:id)
-      model.update(param_hash[:key])
+    def process_hit
+      if completed_assignments?
+        answer = approval_criteria_for_all_assignments
+        return false if answer.nil?
+
+        update_target_object(answer)
+
+        assignments_to_approve = approvable_assignments
+        assignments_to_reject = turkee_assignments - approvable_assignments
+        assignments_to_approve.each { |assignment| assignment.approve! }
+        assignments_to_reject.each { |assignment| assignment.reject! }
+        self.set_expired?(turkable) if !turk.set_complete?(hit, turkable)
+      else
+        false
+      end
     end
 
-    def self.extract_common_values(assignments)
-      results = {}
-      params_list = assignments.map { |assignment| Rack::Utils.parse_nested_query(assignment_params(assignment.answers))["retailer_product"] }
-      params_list[0].keys.each do |key|
-        value_list = params_list.map { |param| param[key] }
-        results[key] = self.most_common_value(value_list)
-      end if params_list.length > 0
-      results.compact
-    end
+    # def import_assignments
+    # results = {}
+    # turkee_task = Turkee::UpcTask.find(upc_task_id) rescue false
+    # hit = RTurk::Hit.new(turkee_task.hit_id)
+    # mturk_assignments = hit.assignments
+    # approved = mturk_assignments.detect { |assign| assign.status == 'Approved' }
+    # if approved
+    # update_from_params(Rack::Utils.parse_nested_query(approved.answers.to_query)["retailer_product"])
+    # return
+    # end
+    # assignments = mturk_assignments.map { |assignment| Rack::Utils.parse_nested_query(assignment.answers.to_query)["retailer_product"] }
+    # assignments[0].keys.each do |key|
+    # value_list = assignments.map { |param| param[key] }
+    # results[key] = most_common_value(value_list)
+    # end if assignments.length > 0
+    # results.compact
+    # update_from_params(results, "mechanical_turk")
+    # if Rails.env == 'production' && results["upc"]
+    # approve_hits_upc(results["upc"], mturk_assignments)
+    # end
+    # end
+
+    # def self.save_imported_values(model, param_hash)
+    # key = model.to_s.underscore.gsub('/','_') # Namespaced model will come across as turkee/turkee_study,
+    # #  we must translate to turkee_turkee_study"
+    # param_hash[:key].delete(:id)
+    # model.update(param_hash[:key])
+    # end
+
+    # def self.extract_common_values(assignments)
+    # results = {}
+    # params_list = assignments.map { |assignment| Rack::Utils.parse_nested_query(assignment_params(assignment.answers))["retailer_product"] }
+    # params_list[0].keys.each do |key|
+    # value_list = params_list.map { |param| param[key] }
+    # results[key] = self.most_common_value(value_list)
+    # end if params_list.length > 0
+    # results.compact
+    # end
 
     def self.most_common_value(responses)
       grouped = responses.group_by do |response|
@@ -130,18 +186,15 @@ module Turkee
       end.sort{ |a, b| b[:size] <=> a[:size] }
 
       if (result.size == 1) or ( result.size > 1 and result[0][:size] != result[1][:size])
-          result[0][:response]
+        result[0][:response]
       else
         nil
       end
     end
 
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
-    def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime,
-                        duration = nil, qualifications = {}, params = {}, opts = {})
-      model = typ.to_s.constantize
-      f_url = build_url(host, model, params, opts)
-
+    def self.create_hit(host, hit_title, hit_description, turkable, num_assignments, reward, lifetime,
+                        duration, f_url, qualifications = {})
       h = RTurk::Hit.create(:title => hit_title) do |hit|
         hit.max_assignments = num_assignments if hit.respond_to?(:max_assignments)
         hit.assignments = num_assignments if hit.respond_to?(:assignments)
@@ -158,52 +211,48 @@ module Turkee
         end
       end
 
-      create(:sandbox => RTurk.sandbox?,
-                        :hit_title => hit_title, :hit_description => hit_description,
-                        :hit_reward => reward.to_f, :hit_num_assignments => num_assignments.to_i,
-                        :hit_lifetime => lifetime, :hit_duration => duration,
-                        :form_url => f_url, :hit_url => h.url,
-                        :hit_id => h.id, :complete => false)
-
-    end
-
-    def self.create(params)
-      raise NotImplementedError.new("create method not implemeted")
+      create(sandbox: RTurk.sandbox?,
+             hit_title: hit_title, hit_description: hit_description,
+             hit_reward: reward.to_f, hit_num_assignments: num_assignments.to_i,
+             hit_lifetime: lifetime, hit_duration: duration,
+             form_url: f_url, hit_url: h.url,
+             turkable_type: turkable.class.name, turkable_id: turkable.id,
+             hit_id: h.id)
     end
 
     ##########################################################################################################
     # DON'T PUSH THIS BUTTON UNLESS YOU MEAN IT. :)
-    def self.clear_all_turks(force = false)
-      # Do NOT execute this function if we're in production mode
-      raise "You can only clear turks in the sandbox/development environment unless you pass 'true' for the force flag." if Rails.env == 'production' && !force
+    # def self.clear_all_turks(force = false)
+    # # Do NOT execute this function if we're in production mode
+    # raise "You can only clear turks in the sandbox/development environment unless you pass 'true' for the force flag." if Rails.env == 'production' && !force
 
-      hits = RTurk::Hit.all
+    # hits = RTurk::Hit.all
 
-      logger.info "#{hits.size} reviewable hits. \n"
+    # logger.info "#{hits.size} reviewable hits. \n"
 
-      unless hits.empty?
-        logger.info "Approving all assignments and disposing of each hit."
+    # unless hits.empty?
+    # logger.info "Approving all assignments and disposing of each hit."
 
-        hits.each do |hit|
-          begin
-            hit.expire!
-            hit.assignments.each do |assignment|
-              logger.info "Assignment status : #{assignment.status}"
-              assignment.approve!('__clear_all_turks__approved__') if assignment.status == 'Submitted'
-            end
+    # hits.each do |hit|
+    # begin
+    # hit.expire!
+    # hit.assignments.each do |assignment|
+    # logger.info "Assignment status : #{assignment.status}"
+    # assignment.approve!('__clear_all_turks__approved__') if assignment.status == 'Submitted'
+    # end
 
-            turkee_task = TurkeeTask.where(hit_id: hit.id).first
-            turkee_task.complete_task if turkee_task.present?
+    # turkee_task = TurkeeTask.where(hit_id: hit.id).first
+    # turkee_task.complete_task if turkee_task.present?
 
-            hit.dispose!
-          rescue Exception => e
-            # Probably a service unavailable
-            logger.error "Exception : #{e.to_s}"
-          end
-        end
-      end
+    # hit.dispose!
+    # rescue Exception => e
+    # # Probably a service unavailable
+    # logger.error "Exception : #{e.to_s}"
+    # end
+    # end
+    # end
 
-    end
+    # end
 
     def turkable
       self.turkable_type.constantize.find(self.turkable_id)
@@ -237,20 +286,24 @@ module Turkee
       models.each { |model| model.send(method, self) if model.respond_to?(method) }
     end
 
-    def process_result(assignment, common_upc, current_upc)
-      self.increment_complete_assignments
-      (common_upc == current_upc && common_upc) ? assignment.approve!('') : assignment.reject!('UPC entered did not match other entries')
-    end
+    # def process_result(assignment, common_upc, current_upc)
+    # self.increment_complete_assignments
+    # (common_upc == current_upc && common_upc) ? assignment.approve!('') : assignment.reject!('UPC entered did not match other entries')
+    # end
 
-    def increment_complete_assignments
-      raise "Missing :completed_assignments attribute. Please upgrade Turkee to the most recent version." unless respond_to?(:completed_assignments)
+    # def increment_complete_assignments
+    # raise "Missing :completed_assignments attribute. Please upgrade Turkee to the most recent version." unless respond_to?(:completed_assignments)
 
-      self.completed_assignments += 1
-      save
-    end
+    # self.completed_assignments += 1
+    # save
+    # end
 
     def completed_assignments?
       hit_num_assignments == turkee_assignments.count
+    end
+
+    def self.form_url(turkable, params)
+      raise NotImplementedError.new("form_url method not implemeted")
     end
 
     private
@@ -260,18 +313,18 @@ module Turkee
     end
 
     # def self.map_imported_values(assignment, default_type)
-      # params     = assignment_params(assignment.answers)
-      # param_hash = Rack::Utils.parse_nested_query(params)
+    # params     = assignment_params(assignment.answers)
+    # param_hash = Rack::Utils.parse_nested_query(params)
 
-      # model      = find_model(param_hash)
-      # model      = default_type.constantize if model.nil?
+    # model      = find_model(param_hash)
+    # model      = default_type.constantize if model.nil?
 
-      # return model, param_hash
+    # return model, param_hash
     # end
 
-    def self.assignment_exists?(assignment)
-      TurkeeImportedAssignment.find_by_assignment_id(assignment.id).present?
-    end
+    # def self.assignment_exists?(assignment)
+    # TurkeeImportedAssignment.find_by_assignment_id(assignment.id).present?
+    # end
 
     def expired?
       Time.now >= (created_at + hit_lifetime.days)
@@ -289,27 +342,18 @@ module Turkee
       answers.to_query
     end
 
-    # Returns custom URL if opts[:form_url] is specified.  Otherwise, builds the default url from the model's :new route
-    def self.build_url(host, model, params, opts)
-      if opts[:form_url]
-        full_url(opts[:form_url], params)
-      else
-        form_url(host, model, params)
-      end
-    end
+    # # Returns the default url of the model's :new route
+    # def self.form_url(host, typ, params = {})
+      # @app ||= ActionDispatch::Integration::Session.new(Rails.application)
+      # url = (host + @app.send("new_#{typ.to_s.underscore}_path"))
+      # full_url(url, params)
+    # end
 
-    # Returns the default url of the model's :new route
-    def self.form_url(host, typ, params = {})
-      @app ||= ActionDispatch::Integration::Session.new(Rails.application)
-      url = (host + @app.send("new_#{typ.to_s.underscore}_path"))
-      full_url(url, params)
-    end
-
-    # Appends params to the url as a query string
-    def self.full_url(u, params)
-      url = u
-      url = "#{u}?#{params.to_query}" unless params.empty?
-      url
-    end
+    # # Appends params to the url as a query string
+    # def self.full_url(u, params)
+      # url = u
+      # url = "#{u}?#{params.to_query}" unless params.empty?
+      # url
+    # end
   end
 end

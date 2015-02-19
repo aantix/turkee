@@ -12,6 +12,7 @@ require 'lockfile'
 #require 'active_support/dependencies/autoload'
 #require 'action_view'
 require 'rspec/rails'
+require_relative './vcr_setup.rb'
 require 'pry'
 
 #ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
@@ -28,19 +29,20 @@ ActiveRecord::Schema.define(:version => 1) do
     t.decimal  "hit_reward", :precision => 10, :scale => 2
     t.integer  "hit_num_assignments"
     t.integer  "hit_lifetime"
+    t.integer  "hit_duration"
     t.string   "form_url"
-    t.string   "task_type"
-    t.integer  "completed_assignments", :default => 0
-    t.boolean  "complete"
+    t.integer  "completed_assignments", default: 0
+    t.boolean  "complete", default: false
+    t.boolean  "expired", default: false
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
-    t.integer  "hit_duration"
-    t.boolean  "expired"
   end
 
   create_table :turkee_assignments do |t|
     t.integer  :turkee_task_id
     t.string   :turkee_assignment_processor_type
+    t.string   :worker_id
+    t.string   :mt_assignment_id
     t.string   :status
     t.text   :response
   end
@@ -70,6 +72,7 @@ Spork.prefork do
     config.mock_with :rspec
 
     config.include Turkee::TurkeeFormHelper
+    config.treat_symbols_as_metadata_keys_with_true_values = true
 
     #config.fixture_path = "#{::Rails.root}/spec/fixtures"
 

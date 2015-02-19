@@ -25,3 +25,4 @@ pkg
 .idea
 
 ## PROJECT::SPECIFIC
+vcr_cassettes/
