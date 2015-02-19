@@ -23,25 +23,29 @@ module Turkee
       raise NotImplementedError.new("expected_result_field method not implemeted")
     end
 
+    def turkable_key
+      self.turkable.class.name.underscore.split('/')[-1]
+    end
+
     def self.valid_assignment?(assignment)
       raise NotImplementedError.new("valid_assignment? method not implemeted")
     end
 
     def approval_criteria_for_all_assignments
-      result_field_name = Turkee::TurkeeTask.expected_result_field
+      result_field_name = self.class.expected_result_field
 
       valid_assignments = turkee_assignments.select do |assignment|
-        Turkee::TurkeeTask.valid_assignment?(assignment)
+        self.class.valid_assignment?(assignment)
       end
 
       responses = valid_assignments.map do |assig|
-        assig.parsed_response[result_field_name]
+        assig.parsed_response[turkable_key][result_field_name]
       end
 
       common_value = Turkee::TurkeeTask.most_common_value(responses)
 
       assignments_with_common_value = valid_assignments.select do |assig|
-        assig.parsed_response[result_field_name] == common_value
+        assig.parsed_response[turkable_key][result_field_name] == common_value
       end
 
       if (assignments_with_common_value.count / hit_num_assignments.to_f) > Turkee::TurkeeTask.threshold && common_value
@@ -60,7 +64,7 @@ module Turkee
       end
     end
 
-    def update_target_object
+    def update_target_object(data)
       raise NotImplementedError.new("update_target_object method not implemeted")
     end
 
@@ -71,6 +75,7 @@ module Turkee
         response = Rack::Utils.parse_nested_query(mt_assignment.answers.to_query)
         assignment_params = { mt_assignment_id: mt_assignment.assignment_id,
                               worker_id: mt_assignment.worker_id,
+                              status: mt_assignment.status,
                               turkee_task_id: self.id }
 
         turkee_assignment = Turkee::TurkeeAssignment.where(assignment_params).first_or_create
@@ -89,7 +94,7 @@ module Turkee
         assignments_to_reject = turkee_assignments - approvable_assignments
         assignments_to_approve.each { |assignment| assignment.approve! }
         assignments_to_reject.each { |assignment| assignment.reject! }
-        self.set_expired?(turkable) if !turk.set_complete?(hit, turkable)
+        self.set_expired? if !self.set_complete?
       else
         false
       end
@@ -148,27 +153,27 @@ module Turkee
       save!
     end
 
-    def set_complete?(hit, models)
+    def set_complete?
       if completed_assignments?
-        hit.dispose!
+        hit = RTurk::Hit.new(self.hit_id)
         complete_task
-        initiate_callback(:hit_complete, models)
+        initiate_callback(:hit_complete)
         return true
       end
 
       false
     end
 
-    def set_expired?(models)
+    def set_expired?
       if expired?
         self.expired = true
         save!
-        initiate_callback(:hit_expired, models)
+        initiate_callback(:hit_expired)
       end
     end
 
-    def initiate_callback(method, models)
-      models.each { |model| model.send(method, self) if model.respond_to?(method) }
+    def initiate_callback(method)
+      turkable.send(method, self) if turkable.respond_to?(method)
     end
 
     def completed_assignments?

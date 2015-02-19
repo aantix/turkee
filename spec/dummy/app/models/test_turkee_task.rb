@@ -12,10 +12,6 @@ class TestTurkeeTask < Turkee::TurkeeTask
       "https://retsku-mt.herokuapp.com"
     end
 
-    def update_target_object
-      turkable.update_attributes(expected_result_field: data)
-    end
-
     def hit_title
       "Test turkee Task"
     end
@@ -53,5 +49,13 @@ class TestTurkeeTask < Turkee::TurkeeTask
       Turkee::TurkeeTask.create_hit(self.name, host, hit_title, hit_description, turkable, num_assignments,
                                     reward, lifetime, duration, f_url, qualifications)
     end
+  end
+
+  def turkable_key
+    "retailer_product"
+  end
+
+  def update_target_object(data)
+    turkable.update_attributes(data)
   end
 end

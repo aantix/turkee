@@ -17,6 +17,8 @@ require 'turkee'
 require 'timecop'
 require 'pry'
 
+ENV["TEST"] = "true"
+
 #ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
 ActiveRecord::Schema.define(:version => 1) do
   create_table :turkee_tasks do |t|
@@ -42,7 +44,6 @@ ActiveRecord::Schema.define(:version => 1) do
 
   create_table :turkee_assignments do |t|
     t.integer  :turkee_task_id
-    t.string   :turkee_assignment_processor_type
     t.string   :worker_id
     t.string   :mt_assignment_id
     t.string   :status
@@ -50,7 +51,7 @@ ActiveRecord::Schema.define(:version => 1) do
   end
 
   create_table :test_target_objects do |t|
-    t.string :answer
+    t.string :category
   end
 end
 
