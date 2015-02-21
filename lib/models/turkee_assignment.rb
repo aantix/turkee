@@ -1,5 +1,5 @@
 module Turkee
-  class TurkeeAssignment < ActiveRecord::Base
+  class TurkeeAssignment < Turkee::TurkeeBase
     APPROVED = "Approved"
     REJECTED = "Rejected"
     SUBMITTED = "Submitted"

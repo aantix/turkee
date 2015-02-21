@@ -1,13 +1,11 @@
 require 'rubygems'
 require 'socket'
 require 'rturk'
-require 'lockfile'
 require 'active_record'
 require "active_support/core_ext/object/to_query"
-require 'action_controller'
 
 module Turkee
-  class TurkeeTask < ActiveRecord::Base
+  class TurkeeTask < Turkee::TurkeeBase
 
     HIT_FRAMEHEIGHT = 1000
 
