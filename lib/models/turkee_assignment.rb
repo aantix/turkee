@@ -7,12 +7,14 @@ module Turkee
     belongs_to :turkee_task
 
     def approve!(feedback=nil)
-      rturk_assignment.approve!(feedback) unless ENV["TEST"]
+      return true if ENV["MT_PRODUCTION"]
+      rturk_assignment.approve!(feedback)
       update_attributes(status: APPROVED)
     end
 
     def reject!(feedback=nil)
-      rturk_assignment.reject!(feedback) unless ENV["TEST"]
+      return true if ENV["MT_PRODUCTION"]
+      rturk_assignment.reject!(feedback)
       update_attributes(status: REJECTED)
     end
 

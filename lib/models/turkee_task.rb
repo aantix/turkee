@@ -152,7 +152,6 @@ module Turkee
 
     def set_complete?
       if completed_assignments?
-        hit = RTurk::Hit.new(self.hit_id)
         complete_task
         initiate_callback(:hit_complete)
         return true
