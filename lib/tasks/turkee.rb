@@ -24,6 +24,4 @@ namespace :turkee do
     puts
     puts "Study created : #{hit.hit_url}"
   end
-
-
 end

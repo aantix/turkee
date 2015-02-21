@@ -12,45 +12,48 @@ require 'lockfile'
 #require 'active_support/dependencies/autoload'
 #require 'action_view'
 require 'rspec/rails'
+require_relative './vcr_setup.rb'
+require 'turkee'
+require 'timecop'
+require 'pry'
 
-
+ENV["TEST"] = "true"
 
 #ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :database => ":memory:")
 ActiveRecord::Schema.define(:version => 1) do
   create_table :turkee_tasks do |t|
+    t.integer  "turkable_id"
+    t.string   "turkable_type"
+    t.string   "type"
     t.string   "hit_url"
     t.boolean  "sandbox"
-    t.string   "task_type"
     t.text     "hit_title"
     t.text     "hit_description"
     t.string   "hit_id"
     t.decimal  "hit_reward", :precision => 10, :scale => 2
     t.integer  "hit_num_assignments"
     t.integer  "hit_lifetime"
+    t.integer  "hit_duration"
     t.string   "form_url"
-    t.integer  "completed_assignments", :default => 0
-    t.boolean  "complete"
-    t.boolean  "expired"
+    t.integer  "completed_assignments", default: 0
+    t.boolean  "complete", default: false
+    t.boolean  "expired", default: false
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
-    t.integer  "turkee_flow_id"
-    t.integer  "hit_duration"
   end
 
-  create_table :surveys do |t|
-    t.string :answer
-    t.datetime :created_at, :null => false
-    t.datetime :updated_at, :null => false
+  create_table :turkee_assignments do |t|
+    t.integer  :turkee_task_id
+    t.string   :worker_id
+    t.string   :mt_assignment_id
+    t.string   :status
+    t.text   :response
   end
 
-  create_table :turkee_studies do |t|
-    t.integer :turkee_task_id
-    t.text :feedback
-    t.string :gold_response
+  create_table :test_target_objects do |t|
+    t.string :category
   end
-
 end
-
 
 Spork.prefork do
   # Loading more in this block will cause your tests to run faster. However,
@@ -72,6 +75,7 @@ Spork.prefork do
     config.mock_with :rspec
 
     config.include Turkee::TurkeeFormHelper
+    config.treat_symbols_as_metadata_keys_with_true_values = true
 
     #config.fixture_path = "#{::Rails.root}/spec/fixtures"
 

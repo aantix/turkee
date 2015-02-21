@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version = "2.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = [%q{Jim Jones}]
+  s.authors = [%q{Jim Jones}, %q{Adam Godel}, %q{Chien Kuo}]
   s.date = %q{2013-05-14}
   s.description = %q{Turkee will help you to easily create usability studies, post HITs, and retrieve the user entered values from Mechanical Turk.}
   s.email = %q{jjones@aantix.com}
@@ -50,6 +50,11 @@ Gem::Specification.new do |s|
   s.add_development_dependency "mocha"
   s.add_development_dependency "sqlite3"
   s.add_development_dependency "spork"
+  s.add_development_dependency "pry-byebug"
+  s.add_development_dependency "pry-rescue"
+  s.add_development_dependency "webmock", '1.11.0'
+  s.add_development_dependency "vcr"
+  s.add_development_dependency "timecop"
 
   # RSpec has to be in both test and development so that rake tasks and generators
   # are available without having to explicitly switch the environment to 'test'
