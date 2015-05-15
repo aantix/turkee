@@ -25,3 +25,5 @@ pkg
 .idea
 
 ## PROJECT::SPECIFIC
+.ruby-version
+.ruby-gemset
