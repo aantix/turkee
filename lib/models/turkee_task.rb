@@ -79,6 +79,7 @@ module Turkee
         hit.reward = reward
         hit.lifetime = lifetime.to_i  # duration in seconds
         hit.duration = duration.to_i if duration  # duration in seconds
+        hit.keywords = opts[:keywords] if opts[:keywords]
         hit.question(f_url, :frame_height => opts[:frame_height])
         unless qualifications.empty?
           qualifications.each do |key, value|
