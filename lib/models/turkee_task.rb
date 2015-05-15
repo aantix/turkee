@@ -76,7 +76,7 @@ module Turkee
 
         hit.description = hit_description
         hit.reward = reward
-        hit.lifetime = lifetime.to_i.days.seconds.to_i
+        hit.lifetime = lifetime.to_i  # duration in seconds
         hit.duration = duration.to_i if duration  # duration in seconds
         hit.question(f_url, :frame_height => HIT_FRAMEHEIGHT)
         unless qualifications.empty?
