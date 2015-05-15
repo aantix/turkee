@@ -67,6 +67,7 @@ module Turkee
     # Creates a new Mechanical Turk task on AMZN with the given title, desc, etc
     def self.create_hit(host, hit_title, hit_description, typ, num_assignments, reward, lifetime,
                         duration = nil, qualifications = {}, params = {}, opts = {})
+      opts  = opts.reverse_merge(:frame_height => HIT_FRAMEHEIGHT)
       model = typ.to_s.constantize
       f_url = build_url(host, model, params, opts)
 
@@ -78,7 +79,7 @@ module Turkee
         hit.reward = reward
         hit.lifetime = lifetime.to_i  # duration in seconds
         hit.duration = duration.to_i if duration  # duration in seconds
-        hit.question(f_url, :frame_height => HIT_FRAMEHEIGHT)
+        hit.question(f_url, :frame_height => opts[:frame_height])
         unless qualifications.empty?
           qualifications.each do |key, value|
             hit.qualifications.add key, value
